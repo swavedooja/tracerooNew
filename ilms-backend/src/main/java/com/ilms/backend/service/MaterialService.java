@@ -65,6 +65,7 @@ public class MaterialService {
         m.setMaterialGroup(dto.getMaterialGroup());
         m.setGs1CategoryCode(dto.getGs1CategoryCode());
         m.setShelfLifeDays(dto.getShelfLifeDays());
+        m.setShelfLifeUom(dto.getShelfLifeUom());
         m.setStorageType(dto.getStorageType());
         m.setProcurementType(dto.getProcurementType());
         m.setBaseUOM(dto.getBaseUOM());
@@ -74,12 +75,15 @@ public class MaterialService {
         m.setTradeWeightKg(dto.getTradeWeightKg());
         m.setTradeDimensionsMM(dto.getTradeDimensionsMM());
         m.setIsPackaged(dto.getIsPackaged());
+        m.setIsMilitaryGrade(dto.getIsMilitaryGrade());
         m.setIsFragile(dto.getIsFragile());
         m.setIsEnvSensitive(dto.getIsEnvSensitive());
         m.setIsHighValue(dto.getIsHighValue());
+        m.setIsHazardous(dto.getIsHazardous());
         m.setIsBatchManaged(dto.getIsBatchManaged());
         m.setPackagingMaterialCode(dto.getPackagingMaterialCode());
         m.setIsSerialized(dto.getIsSerialized());
+        m.setIsRfidCapable(dto.getIsRfidCapable());
         m.setExternalERPCode(dto.getExternalERPCode());
         m.setItemWeight(dto.getItemWeight());
         m.setItemDimension(dto.getItemDimension());

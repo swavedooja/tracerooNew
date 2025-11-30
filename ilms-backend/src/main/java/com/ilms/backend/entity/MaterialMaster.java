@@ -33,6 +33,8 @@ public class MaterialMaster {
     private String gs1CategoryCode;
     @Column(name = "shelf_life_days")
     private Integer shelfLifeDays;
+    @Column(name = "shelf_life_uom")
+    private String shelfLifeUom;
     @Column(name = "storage_type")
     private String storageType;
     @Column(name = "procurement_type")
@@ -50,13 +52,16 @@ public class MaterialMaster {
     @Column(name = "trade_dimensionsmm")
     private String tradeDimensionsMM;
     private Boolean isPackaged;
+    private Boolean isMilitaryGrade;
     private Boolean isFragile;
     private Boolean isEnvSensitive;
     private Boolean isHighValue;
+    private Boolean isHazardous;
     private Boolean isBatchManaged;
     @Column(name = "packaging_material_code")
     private String packagingMaterialCode;
     private Boolean isSerialized;
+    private Boolean isRfidCapable;
     @Column(name = "externalerpcode")
     private String externalERPCode;
     private String itemWeight;

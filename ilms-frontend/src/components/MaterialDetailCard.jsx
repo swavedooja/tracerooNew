@@ -29,7 +29,7 @@ export default function MaterialDetailCard({ material, images = [] }) {
               <Stack direction="row" spacing={1}>
                 {images.slice(0, 6).map((img) => (
                   <Box key={img.id} component="img" src={img.url} alt={img.filename}
-                       sx={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 1, border: '1px solid #e5e7eb' }} />
+                    sx={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 1, border: '1px solid #e5e7eb' }} />
                 ))}
               </Stack>
             </CardContent>
@@ -46,13 +46,25 @@ export default function MaterialDetailCard({ material, images = [] }) {
                 ['Material Type', material?.type],
                 ['Material Class', material?.materialClass],
                 ['Material group', material?.materialGroup],
-                ['Material State', material?.materialState],
                 ['Material Description', material?.description],
                 ['Country of Origin', material?.countryOfOrigin],
                 ['Base UOM', material?.baseUOM],
-                ['Item Weight', material?.itemWeight],
-                ['Item Dimension', material?.itemDimension],
-                ['Max Storage Period', material?.maxStoragePeriod],
+                ['Net Weight', material?.netWeightKg ? `${material.netWeightKg} kg` : '-'],
+                ['Dimensions', material?.dimensionsMM],
+                ['Shelf Life', material?.shelfLifeDays ? `${material.shelfLifeDays} ${material.shelfLifeUom || 'days'}` : '-'],
+                ['Storage Type', material?.storageType],
+                ['Temp Range', material?.handlingParameter?.temperatureMin ? `${material.handlingParameter.temperatureMin} - ${material.handlingParameter.temperatureMax} °C` : '-'],
+                ['Humidity Range', material?.handlingParameter?.humidityMin ? `${material.handlingParameter.humidityMin} - ${material.handlingParameter.humidityMax} %` : '-'],
+                ['Flags', [
+                  material?.isFragile && 'Fragile',
+                  material?.isEnvSensitive && 'Env Sensitive',
+                  material?.isHighValue && 'High Value',
+                  material?.isMilitaryGrade && 'Military Grade',
+                  material?.isHazardous && 'Hazardous',
+                  material?.isBatchManaged && 'Batch Managed',
+                  material?.isSerialized && 'Serialized',
+                  material?.isRfidCapable && 'RFID Capable'
+                ].filter(Boolean).join(', ') || '-'],
                 ['Material EAN/UPC', material?.materialEANupc],
               ].map(([label, value], idx, arr) => (
                 <Box key={label} sx={{ px: 2, py: 1.25 }}>

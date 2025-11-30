@@ -20,6 +20,7 @@ public class MaterialDTO {
     private String materialGroup;
     private String gs1CategoryCode;
     private Integer shelfLifeDays;
+    private String shelfLifeUom;
     private String storageType;
     private String procurementType;
     private String baseUOM;
@@ -29,12 +30,15 @@ public class MaterialDTO {
     private Double tradeWeightKg;
     private String tradeDimensionsMM;
     private Boolean isPackaged;
+    private Boolean isMilitaryGrade;
     private Boolean isFragile;
     private Boolean isEnvSensitive;
     private Boolean isHighValue;
+    private Boolean isHazardous;
     private Boolean isBatchManaged;
     private String packagingMaterialCode;
     private Boolean isSerialized;
+    private Boolean isRfidCapable;
     private String externalERPCode;
     private String itemWeight;
     private String itemDimension;

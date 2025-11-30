@@ -132,6 +132,8 @@ export default function MaterialForm() {
                     <FormControlLabel control={<Checkbox checked={!!form.isFragile} onChange={onChange('isFragile')} disabled={!edit} />} label="Fragile" />
                     <FormControlLabel control={<Checkbox checked={!!form.isEnvSensitive} onChange={onChange('isEnvSensitive')} disabled={!edit} />} label="Environment Sensitive" />
                     <FormControlLabel control={<Checkbox checked={!!form.isHighValue} onChange={onChange('isHighValue')} disabled={!edit} />} label="High Value" />
+                    <FormControlLabel control={<Checkbox checked={!!form.isMilitaryGrade} onChange={onChange('isMilitaryGrade')} disabled={!edit} />} label="Military Grade" />
+                    <FormControlLabel control={<Checkbox checked={!!form.isHazardous} onChange={onChange('isHazardous')} disabled={!edit} />} label="Hazardous" />
                   </Grid>
                   <Grid item xs={12}><TextField label="Hazardous Class" fullWidth size="small" value={form?.handlingParameter?.hazardousClass || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), hazardousClass: e.target.value}}))} disabled={!edit} /></Grid>
                 </Grid>
@@ -141,6 +143,7 @@ export default function MaterialForm() {
                 <Grid container spacing={2}>
                   <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isBatchManaged} onChange={onChange('isBatchManaged')} disabled={!edit} />} label="Batch Managed" /></Grid>
                   <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isSerialized} onChange={onChange('isSerialized')} disabled={!edit} />} label="Serialized" /></Grid>
+                  <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isRfidCapable} onChange={onChange('isRfidCapable')} disabled={!edit} />} label="RFID Capable" /></Grid>
                   <Grid item xs={12}><TextField label="EPC Format" fullWidth size="small" value={form?.handlingParameter?.epcFormat || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), epcFormat: e.target.value}}))} disabled={!edit} /></Grid>
                 </Grid>
               </Section>
@@ -161,6 +164,7 @@ export default function MaterialForm() {
               <Section title="Storage & Handling">
                 <Grid container spacing={2}>
                   <Grid item xs={4}><TextField type="number" label="Shelf Life (days)" fullWidth size="small" value={form.shelfLifeDays || ''} onChange={onChange('shelfLifeDays')} disabled={!edit} /></Grid>
+                  <Grid item xs={4}><TextField label="Shelf Life UOM" fullWidth size="small" value={form.shelfLifeUom || ''} onChange={onChange('shelfLifeUom')} disabled={!edit} /></Grid>
                   <Grid item xs={4}><TextField label="Storage Type" fullWidth size="small" value={form.storageType || ''} onChange={onChange('storageType')} disabled={!edit} /></Grid>
                   <Grid item xs={4}><TextField label="Procurement Type" fullWidth size="small" value={form.procurementType || ''} onChange={onChange('procurementType')} disabled={!edit} /></Grid>
                   <Grid item xs={6}><TextField type="number" label="Temp Min (°C)" fullWidth size="small" value={form?.handlingParameter?.temperatureMin || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), temperatureMin: Number(e.target.value)}}))} disabled={!edit} /></Grid>

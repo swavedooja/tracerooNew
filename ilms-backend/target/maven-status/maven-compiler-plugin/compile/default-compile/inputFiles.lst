@@ -1,24 +1,38 @@
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\config\CorsConfig.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\config\WebConfig.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\controller\MaterialController.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\controller\PackagingHierarchyController.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialDocumentDTO.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialDTO.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialImageDTO.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\PackagingHierarchyDTO.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\PackagingLevelDTO.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\HandlingParameter.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialDocument.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialImage.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialMaster.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\PackagingHierarchy.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\PackagingLevel.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\IlmsBackendApplication.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\HandlingParameterRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialDocumentRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialImageRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialMasterRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\PackagingHierarchyRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\PackagingLevelRepository.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\service\MaterialService.java
-C:\Users\omiee\Desktop\omiee\CascadeProjects\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\service\PackagingHierarchyService.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\config\CorsConfig.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\config\SupabaseConfig.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\config\WebConfig.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\controller\MaterialController.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\controller\PackagingHierarchyController.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialDocumentDTO.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialDTO.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\MaterialImageDTO.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\PackagingHierarchyDTO.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\dto\PackagingLevelDTO.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\HandlingParameter.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialDocument.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialImage.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\MaterialMaster.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\PackagingHierarchy.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\entity\PackagingLevel.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\IlmsBackendApplication.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\HandlingParameterRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialDocumentRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialImageRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\MaterialMasterRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\PackagingHierarchyRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\repository\PackagingLevelRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\service\MaterialService.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\service\PackagingHierarchyService.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabaseHandlingParameter.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabaseMaterialDocument.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabaseMaterialImage.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabaseMaterialMaster.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabasePackagingHierarchy.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\entity\SupabasePackagingLevel.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabaseHandlingParameterRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabaseMaterialDocumentRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabaseMaterialImageRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabaseMaterialMasterRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabasePackagingHierarchyRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\repository\SupabasePackagingLevelRepository.java
+C:\Swapnil\2025 Nov Projects\TraceRoo0.3\windsurf-project\ilms-backend\src\main\java\com\ilms\backend\supabase\service\SupabaseSyncService.java

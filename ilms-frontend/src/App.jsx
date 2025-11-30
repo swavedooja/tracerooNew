@@ -25,6 +25,13 @@ import MaterialList from './components/MaterialList';
 import MaterialForm from './components/MaterialForm';
 import MaterialCreate from './components/MaterialCreate';
 import PackagingHierarchyEditor from './components/PackagingHierarchyEditor';
+import WarehouseList from './components/Warehouse/WarehouseList';
+import WarehouseForm from './components/Warehouse/WarehouseForm';
+import LabelDesigner from './components/LabelDesigner/LabelDesigner';
+import TemplateList from './components/LabelDesigner/TemplateList';
+import Registration from './components/Inventory/Registration';
+import PackingStation from './components/Inventory/PackingStation';
+import SearchPortal from './components/Trace/SearchPortal';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import Footer from './components/Footer';
@@ -36,7 +43,12 @@ import {
   Notifications,
   Settings,
   Logout,
+  Logout,
   LocalShipping,
+  Store,
+  Style,
+  QrCodeScanner,
+  Timeline,
 } from '@mui/icons-material';
 
 const AnimatedBox = motion(Box);
@@ -52,6 +64,11 @@ function NavBar({ onLogout }) {
     { label: 'New Material', icon: AddCircleOutline, path: '/materials/new' },
     { label: 'Materials', icon: Inventory2, path: '/materials' },
     { label: 'Packaging', icon: LocalShipping, path: '/packaging' },
+    { label: 'Warehouses', icon: Store, path: '/warehouses' },
+    { label: 'Label Designer', icon: Style, path: '/label-templates' },
+    { label: 'Registration', icon: AddCircleOutline, path: '/inventory/register' },
+    { label: 'Packing Station', icon: QrCodeScanner, path: '/inventory/packing' },
+    { label: 'Track & Trace', icon: Timeline, path: '/trace' },
   ];
 
   const handleProfileClick = (event) => {
@@ -366,6 +383,15 @@ export default function App() {
           <Route path="/materials/:code" element={<MaterialForm />} />
           <Route path="/materials" element={<MaterialList />} />
           <Route path="/packaging" element={<PackagingHierarchyEditor />} />
+          <Route path="/warehouses" element={<WarehouseList />} />
+          <Route path="/warehouses/new" element={<WarehouseForm />} />
+          <Route path="/warehouses/:code" element={<WarehouseForm />} />
+          <Route path="/label-templates" element={<TemplateList />} />
+          <Route path="/label-templates/new" element={<LabelDesigner />} />
+          <Route path="/label-templates/:id" element={<LabelDesigner />} />
+          <Route path="/inventory/register" element={<Registration />} />
+          <Route path="/inventory/packing" element={<PackingStation />} />
+          <Route path="/trace" element={<SearchPortal />} />
         </Routes>
       </Container>
       <Footer />

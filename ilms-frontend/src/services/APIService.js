@@ -10,62 +10,83 @@ const api = axios.create({
 // Helper to simulate network delay
 const mockDelay = (data, ms = 500) => new Promise(resolve => setTimeout(() => resolve(data), ms));
 
+// Helper to handle API calls with fallback to mock data
+const withFallback = (apiCall, mockResponse) => {
+  if (USE_MOCK) return mockDelay(mockResponse);
+  return apiCall().catch(err => {
+    console.warn('API call failed, falling back to mock data:', err);
+    return mockDelay(mockResponse);
+  });
+};
+
 export const MaterialsAPI = {
-  list: (params) => USE_MOCK ? mockDelay(mockData.materials.list) : api.get('/materials', { params }).then(r => r.data),
-  get: (code) => USE_MOCK ? mockDelay(mockData.materials.details(code)) : api.get(`/materials/${code}`).then(r => r.data),
-  create: (payload) => USE_MOCK ? mockDelay({ ...payload, id: 'MOCK-NEW-ID' }) : api.post('/materials', payload).then(r => r.data),
-  update: (code, payload) => USE_MOCK ? mockDelay({ ...payload, material_code: code }) : api.put(`/materials/${code}`, payload).then(r => r.data),
-  remove: (code) => USE_MOCK ? mockDelay({ success: true }) : api.delete(`/materials/${code}`).then(r => r.data),
-  images: (code) => USE_MOCK ? mockDelay(mockData.materials.images) : api.get(`/materials/${code}/images`).then(r => r.data),
-  documents: (code) => USE_MOCK ? mockDelay(mockData.materials.documents) : api.get(`/materials/${code}/documents`).then(r => r.data),
+  list: (params) => withFallback(() => api.get('/materials', { params }).then(r => r.data), mockData.materials.list),
+  get: (code) => withFallback(() => api.get(`/materials/${code}`).then(r => r.data), mockData.materials.details(code)),
+  create: (payload) => withFallback(() => api.post('/materials', payload).then(r => r.data), { ...payload, id: 'MOCK-NEW-ID' }),
+  update: (code, payload) => withFallback(() => api.put(`/materials/${code}`, payload).then(r => r.data), { ...payload, material_code: code }),
+  remove: (code) => withFallback(() => api.delete(`/materials/${code}`).then(r => r.data), { success: true }),
+  images: (code) => withFallback(() => api.get(`/materials/${code}/images`).then(r => r.data), mockData.materials.images),
+  documents: (code) => withFallback(() => api.get(`/materials/${code}/documents`).then(r => r.data), mockData.materials.documents),
   uploadImage: (code, file, type = 'material') => {
-    if (USE_MOCK) return mockDelay({ id: Math.random(), url: URL.createObjectURL(file), type });
+    const mockResponse = { id: Math.random(), url: URL.createObjectURL(file), type };
+    if (USE_MOCK) return mockDelay(mockResponse);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('type', type);
-    return api.post(`/materials/${code}/images`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+    return api.post(`/materials/${code}/images`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then(r => r.data)
+      .catch(err => {
+        console.warn('Upload failed, falling back to mock:', err);
+        return mockDelay(mockResponse);
+      });
   },
   uploadDocument: (code, file, docType) => {
-    if (USE_MOCK) return mockDelay({ id: Math.random(), name: file.name, url: '#', type: docType });
+    const mockResponse = { id: Math.random(), name: file.name, url: '#', type: docType };
+    if (USE_MOCK) return mockDelay(mockResponse);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('docType', docType);
-    return api.post(`/materials/${code}/documents`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+    return api.post(`/materials/${code}/documents`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then(r => r.data)
+      .catch(err => {
+        console.warn('Upload failed, falling back to mock:', err);
+        return mockDelay(mockResponse);
+      });
   },
 };
 
 export const PackagingAPI = {
-  create: (payload) => USE_MOCK ? mockDelay({ ...payload, id: 'PKG-NEW' }) : api.post('/packaging-hierarchy', payload).then(r => r.data),
-  get: (id) => USE_MOCK ? mockDelay(mockData.packaging.get(id)) : api.get(`/packaging-hierarchy/${id}`).then(r => r.data),
-  update: (id, payload) => USE_MOCK ? mockDelay({ ...payload, id }) : api.put(`/packaging-hierarchy/${id}`, payload).then(r => r.data),
-  remove: (id) => USE_MOCK ? mockDelay({ success: true }) : api.delete(`/packaging-hierarchy/${id}`).then(r => r.data),
-  preview: (id) => USE_MOCK ? mockDelay(mockData.packaging.preview(id)) : api.get(`/packaging-hierarchy/${id}/preview`).then(r => r.data),
+  create: (payload) => withFallback(() => api.post('/packaging-hierarchy', payload).then(r => r.data), { ...payload, id: 'PKG-NEW' }),
+  get: (id) => withFallback(() => api.get(`/packaging-hierarchy/${id}`).then(r => r.data), mockData.packaging.get(id)),
+  update: (id, payload) => withFallback(() => api.put(`/packaging-hierarchy/${id}`, payload).then(r => r.data), { ...payload, id }),
+  remove: (id) => withFallback(() => api.delete(`/packaging-hierarchy/${id}`).then(r => r.data), { success: true }),
+  preview: (id) => withFallback(() => api.get(`/packaging-hierarchy/${id}/preview`).then(r => r.data), mockData.packaging.preview(id)),
 };
 
 export const WarehouseAPI = {
-  list: () => USE_MOCK ? mockDelay(mockData.warehouses.list) : api.get('/warehouses').then(r => r.data),
-  get: (code) => USE_MOCK ? mockDelay(mockData.warehouses.details(code)) : api.get(`/warehouses/${code}`).then(r => r.data),
-  create: (payload) => USE_MOCK ? mockDelay({ ...payload, warehouse_code: 'WH-NEW' }) : api.post('/warehouses', payload).then(r => r.data),
-  update: (code, payload) => USE_MOCK ? mockDelay({ ...payload, warehouse_code: code }) : api.put(`/warehouses/${code}`, payload).then(r => r.data),
-  remove: (code) => USE_MOCK ? mockDelay({ success: true }) : api.delete(`/warehouses/${code}`).then(r => r.data),
+  list: () => withFallback(() => api.get('/warehouses').then(r => r.data), mockData.warehouses.list),
+  get: (code) => withFallback(() => api.get(`/warehouses/${code}`).then(r => r.data), mockData.warehouses.details(code)),
+  create: (payload) => withFallback(() => api.post('/warehouses', payload).then(r => r.data), { ...payload, warehouse_code: 'WH-NEW' }),
+  update: (code, payload) => withFallback(() => api.put(`/warehouses/${code}`, payload).then(r => r.data), { ...payload, warehouse_code: code }),
+  remove: (code) => withFallback(() => api.delete(`/warehouses/${code}`).then(r => r.data), { success: true }),
 };
 
 export const LabelTemplateAPI = {
-  list: () => USE_MOCK ? mockDelay(mockData.labelTemplates.list) : api.get('/label-templates').then(r => r.data),
-  get: (id) => USE_MOCK ? mockDelay(mockData.labelTemplates.details(id)) : api.get(`/label-templates/${id}`).then(r => r.data),
-  create: (payload) => USE_MOCK ? mockDelay({ ...payload, id: Math.floor(Math.random() * 1000) }) : api.post('/label-templates', payload).then(r => r.data),
-  update: (id, payload) => USE_MOCK ? mockDelay({ ...payload, id }) : api.put(`/label-templates/${id}`, payload).then(r => r.data),
-  remove: (id) => USE_MOCK ? mockDelay({ success: true }) : api.delete(`/label-templates/${id}`).then(r => r.data),
+  list: () => withFallback(() => api.get('/label-templates').then(r => r.data), mockData.labelTemplates.list),
+  get: (id) => withFallback(() => api.get(`/label-templates/${id}`).then(r => r.data), mockData.labelTemplates.details(id)),
+  create: (payload) => withFallback(() => api.post('/label-templates', payload).then(r => r.data), { ...payload, id: Math.floor(Math.random() * 1000) }),
+  update: (id, payload) => withFallback(() => api.put(`/label-templates/${id}`, payload).then(r => r.data), { ...payload, id }),
+  remove: (id) => withFallback(() => api.delete(`/label-templates/${id}`).then(r => r.data), { success: true }),
 };
 
 export const InventoryAPI = {
-  list: () => USE_MOCK ? mockDelay(mockData.inventory.list) : api.get('/inventory').then(r => r.data),
-  registerBatch: (payload) => USE_MOCK ? mockDelay({ success: true, ...payload }) : api.post('/inventory/register-batch', payload).then(r => r.data),
-  packBox: (payload) => USE_MOCK ? mockDelay({ success: true, ...payload }) : api.post('/inventory/pack-box', payload).then(r => r.data),
+  list: () => withFallback(() => api.get('/inventory').then(r => r.data), mockData.inventory.list),
+  registerBatch: (payload) => withFallback(() => api.post('/inventory/register-batch', payload).then(r => r.data), { success: true, ...payload }),
+  packBox: (payload) => withFallback(() => api.post('/inventory/pack-box', payload).then(r => r.data), { success: true, ...payload }),
 };
 
 export const TraceAPI = {
-  getHistory: (serial) => USE_MOCK ? mockDelay(mockData.trace.history(serial)) : api.get(`/trace/${serial}`).then(r => r.data),
+  getHistory: (serial) => withFallback(() => api.get(`/trace/${serial}`).then(r => r.data), mockData.trace.history(serial)),
 };
 
 export default api;

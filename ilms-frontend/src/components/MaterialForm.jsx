@@ -1,208 +1,167 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import {
-  Box,
-  Paper,
-  Tabs,
-  Tab,
-  Grid,
-  Button,
-  Typography,
-  TextField,
-  Checkbox,
-  FormControlLabel,
-  Divider,
-  Snackbar,
-  Alert,
-  CircularProgress,
-} from '@mui/material';
-import { MaterialsAPI } from '../services/APIService';
-import MaterialDetailCard from './MaterialDetailCard';
-import FileUploader from './FileUploader';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Box, Button, Grid, Paper, TextField, Typography, MenuItem, Tab, Tabs, FormControlLabel, Switch, IconButton } from '@mui/material';
+import { Save, ArrowBack, AutoFixHigh, Delete } from '@mui/icons-material';
+import { MaterialsAPI, MasterDefinitionsAPI } from '../services/APIService';
 
-const Section = ({ title, children }) => (
-  <Box sx={{ mb: 2 }}>
-    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>{title}</Typography>
-    <Paper variant="outlined" sx={{ p: 2 }}>{children}</Paper>
-  </Box>
-);
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 export default function MaterialForm() {
   const { code } = useParams();
+  const navigate = useNavigate();
   const [tab, setTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [material, setMaterial] = useState(null);
-  const [images, setImages] = useState([]);
-  const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({});
-  const [toast, setToast] = useState({ open: false, msg: '', sev: 'success' });
+  const [form, setForm] = useState({
+    code: '', name: '', description: '', type: '', category: 'GENERAL', status: 'ACTIVE', baseUom: 'EA',
+    isBatchManaged: false, isSerialManaged: false, shelfLifeDays: '', minStock: '', maxStock: '',
+    grossWeight: '', netWeight: '', weightUom: 'KG',
+    length: '', width: '', height: '', dimensionUom: 'CM', volume: '', volumeUom: 'L',
+    isHazmat: false, hazmatClass: '', unNumber: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [types, setTypes] = useState([]);
+  const [cats, setCats] = useState([]);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const m = await MaterialsAPI.get(code);
-      setMaterial(m);
-      setForm({ ...m });
-      try {
-        const imgs = await MaterialsAPI.images(code);
-        setImages(imgs);
-      } catch { setImages([]); }
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    loadMasters();
+    if (code) {
+      load(code);
     }
+  }, [code]);
+
+  const loadMasters = async () => {
+    try {
+      const defs = await MasterDefinitionsAPI.list();
+      setTypes(defs.filter(d => d.defType === 'MATERIAL_TYPE'));
+      setCats(defs.filter(d => d.defType === 'MATERIAL_CAT'));
+    } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [code]);
+  const load = async (c) => {
+    setLoading(true);
+    try {
+      const data = await MaterialsAPI.get(c);
+      setForm(data);
+    } catch (e) { console.error(e); alert('Failed load'); }
+    finally { setLoading(false); }
+  };
 
-  const onChange = (field) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm((f) => ({ ...f, [field]: value }));
+  const handleChange = (e) => {
+    const { name, value, checked, type } = e.target;
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const handleAutoFill = () => {
+    const unique = Math.floor(Math.random() * 1000);
+    setForm({
+      ...form,
+      code: code || `MAT-${unique}`,
+      name: `Auto Material ${unique}`,
+      description: 'Auto-generated material for testing',
+      type: types[0]?.defValue || 'RAW',
+      baseUom: 'EA',
+      isBatchManaged: true,
+      shelfLifeDays: 365,
+      minStock: 10,
+      grossWeight: 5.5,
+      netWeight: 5.0
+    });
   };
 
   const save = async () => {
+    setLoading(true);
     try {
-      await MaterialsAPI.update(code, form);
-      setToast({ open: true, msg: 'Saved', sev: 'success' });
-      setEdit(false);
-      await load();
-    } catch (e) {
-      setToast({ open: true, msg: e?.response?.data?.message || 'Save failed', sev: 'error' });
-    }
+      if (code) {
+        await MaterialsAPI.update(code, form);
+      } else {
+        await MaterialsAPI.create(form);
+      }
+      navigate('/materials');
+    } catch (e) { console.error(e); alert('Failed save'); }
+    finally { setLoading(false); }
   };
-
-  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>;
-  if (!material) return <Typography>Material not found</Typography>;
 
   return (
     <Box>
-      <Tabs value={tab} onChange={(_, v)=> setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="Material Details" />
-        <Tab label="Bill Of Material" />
-        <Tab label="Storage Location" />
-        <Tab label="Supplier Details" />
-      </Tabs>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+        <IconButton onClick={() => navigate('/materials')}><ArrowBack /></IconButton>
+        <Typography variant="h5" fontWeight="bold">{code ? `Edit: ${code}` : 'New Material'}</Typography>
+        <Box sx={{ flexGrow: 1 }} />
+        <IconButton onClick={handleAutoFill} color="secondary" title="Auto-fill"><AutoFixHigh /></IconButton>
+        <Button variant="contained" startIcon={<Save />} onClick={save} disabled={loading}>Save</Button>
+      </Box>
 
-      {tab === 0 && (
-        <Box>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 1 }}>
-                {!edit ? (
-                  <Button variant="outlined" onClick={()=> setEdit(true)}>Edit</Button>
-                ) : (
-                  <>
-                    <Button variant="contained" onClick={save}>Save</Button>
-                    <Button variant="text" onClick={()=> { setEdit(false); setForm(material); }}>Cancel</Button>
-                  </>
-                )}
-              </Box>
+      <Paper variant="outlined">
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tab label="General Info" />
+          <Tab label="Track & Trace" />
+          <Tab label="Physical & Storage" />
+        </Tabs>
+
+        <TabPanel value={tab} index={0}>
+          <Grid container spacing={2}>
+            <Grid item xs={6}><TextField label="Material Code" name="code" value={form.code} onChange={handleChange} fullWidth required disabled={!!code} /></Grid>
+            <Grid item xs={6}><TextField label="Name" name="name" value={form.name} onChange={handleChange} fullWidth required /></Grid>
+            <Grid item xs={12}><TextField label="Description" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={2} /></Grid>
+            <Grid item xs={4}>
+              <TextField select label="Type" name="type" value={form.type} onChange={handleChange} fullWidth>
+                {types.map(t => <MenuItem key={t.id} value={t.defValue}>{t.description}</MenuItem>)}
+              </TextField>
             </Grid>
+            <Grid item xs={4}>
+              <TextField select label="Category" name="category" value={form.category} onChange={handleChange} fullWidth>
+                {cats.map(c => <MenuItem key={c.id} value={c.defValue}>{c.description}</MenuItem>)}
+                <MenuItem value="GENERAL">General</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={4}><TextField label="Base UOM" name="baseUom" value={form.baseUom} onChange={handleChange} fullWidth /></Grid>
+          </Grid>
+        </TabPanel>
 
-            {!edit && (
-              <Grid item xs={12}>
-                <MaterialDetailCard material={material} images={images} />
-              </Grid>
-            )}
+        <TabPanel value={tab} index={1}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}><Typography variant="subtitle2" color="primary">Tracking Control</Typography></Grid>
+            <Grid item xs={3}><FormControlLabel control={<Switch checked={form.isBatchManaged} onChange={handleChange} name="isBatchManaged" />} label="Batch Managed" /></Grid>
+            <Grid item xs={3}><FormControlLabel control={<Switch checked={form.isSerialManaged} onChange={handleChange} name="isSerialManaged" />} label="Serial Managed" /></Grid>
+            <Grid item xs={6} />
 
-            {edit && (
+            <Grid item xs={12} sx={{ mt: 2 }}><Typography variant="subtitle2" color="primary">Planning</Typography></Grid>
+            <Grid item xs={4}><TextField label="Shelf Life (Days)" name="shelfLifeDays" type="number" value={form.shelfLifeDays} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={4}><TextField label="Min Stock" name="minStock" type="number" value={form.minStock} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={4}><TextField label="Max Stock" name="maxStock" type="number" value={form.maxStock} onChange={handleChange} fullWidth /></Grid>
+          </Grid>
+        </TabPanel>
+
+        <TabPanel value={tab} index={2}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}><Typography variant="subtitle2" color="primary">Weight & Dimensions</Typography></Grid>
+            <Grid item xs={3}><TextField label="Gross Weight" name="grossWeight" type="number" value={form.grossWeight} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={3}><TextField label="Net Weight" name="netWeight" type="number" value={form.netWeight} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={2}><TextField label="Unit" name="weightUom" value={form.weightUom} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={4} />
+
+            <Grid item xs={3}><TextField label="Length" name="length" type="number" value={form.length} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={3}><TextField label="Width" name="width" type="number" value={form.width} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={3}><TextField label="Height" name="height" type="number" value={form.height} onChange={handleChange} fullWidth /></Grid>
+            <Grid item xs={2}><TextField label="Unit" name="dimensionUom" value={form.dimensionUom} onChange={handleChange} fullWidth /></Grid>
+
+            <Grid item xs={12} sx={{ mt: 2 }}><Typography variant="subtitle2" color="primary">Hazardous Material</Typography></Grid>
+            <Grid item xs={12}><FormControlLabel control={<Switch checked={form.isHazmat} onChange={handleChange} name="isHazmat" />} label="Is Hazardous Material" /></Grid>
+            {form.isHazmat && (
               <>
-            <Grid item xs={12} md={6}>
-              <Section title="General Info">
-                <Grid container spacing={2}>
-                  <Grid item xs={6}><TextField label="Code" fullWidth size="small" value={form.materialCode || ''} onChange={onChange('materialCode')} disabled /></Grid>
-                  <Grid item xs={6}><TextField label="Name" fullWidth size="small" value={form.materialName || ''} onChange={onChange('materialName')} disabled={!edit} /></Grid>
-                  <Grid item xs={12}><TextField label="Description" fullWidth size="small" value={form.description || ''} onChange={onChange('description')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="SKU" fullWidth size="small" value={form.sku || ''} onChange={onChange('sku')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="Country of Origin" fullWidth size="small" value={form.countryOfOrigin || ''} onChange={onChange('countryOfOrigin')} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Classification">
-                <Grid container spacing={2}>
-                  <Grid item xs={6}><TextField label="Type" fullWidth size="small" value={form.type || ''} onChange={onChange('type')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="Class" fullWidth size="small" value={form.materialClass || ''} onChange={onChange('materialClass')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="Group" fullWidth size="small" value={form.materialGroup || ''} onChange={onChange('materialGroup')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="GS1 Category Code" fullWidth size="small" value={form.gs1CategoryCode || ''} onChange={onChange('gs1CategoryCode')} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Compliance & Safety">
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <FormControlLabel control={<Checkbox checked={!!form.isFragile} onChange={onChange('isFragile')} disabled={!edit} />} label="Fragile" />
-                    <FormControlLabel control={<Checkbox checked={!!form.isEnvSensitive} onChange={onChange('isEnvSensitive')} disabled={!edit} />} label="Environment Sensitive" />
-                    <FormControlLabel control={<Checkbox checked={!!form.isHighValue} onChange={onChange('isHighValue')} disabled={!edit} />} label="High Value" />
-                    <FormControlLabel control={<Checkbox checked={!!form.isMilitaryGrade} onChange={onChange('isMilitaryGrade')} disabled={!edit} />} label="Military Grade" />
-                    <FormControlLabel control={<Checkbox checked={!!form.isHazardous} onChange={onChange('isHazardous')} disabled={!edit} />} label="Hazardous" />
-                  </Grid>
-                  <Grid item xs={12}><TextField label="Hazardous Class" fullWidth size="small" value={form?.handlingParameter?.hazardousClass || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), hazardousClass: e.target.value}}))} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Serialization & Batch">
-                <Grid container spacing={2}>
-                  <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isBatchManaged} onChange={onChange('isBatchManaged')} disabled={!edit} />} label="Batch Managed" /></Grid>
-                  <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isSerialized} onChange={onChange('isSerialized')} disabled={!edit} />} label="Serialized" /></Grid>
-                  <Grid item xs={6}><FormControlLabel control={<Checkbox checked={!!form.isRfidCapable} onChange={onChange('isRfidCapable')} disabled={!edit} />} label="RFID Capable" /></Grid>
-                  <Grid item xs={12}><TextField label="EPC Format" fullWidth size="small" value={form?.handlingParameter?.epcFormat || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), epcFormat: e.target.value}}))} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Section title="Dimensions & Weight">
-                <Grid container spacing={2}>
-                  <Grid item xs={4}><TextField label="Base UOM" fullWidth size="small" value={form.baseUOM || ''} onChange={onChange('baseUOM')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField type="number" label="Net Weight (kg)" fullWidth size="small" value={form.netWeightKg || ''} onChange={onChange('netWeightKg')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Dimensions (LxWxH)" fullWidth size="small" value={form.dimensionsMM || ''} onChange={onChange('dimensionsMM')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Trade UOM" fullWidth size="small" value={form.tradeUOM || ''} onChange={onChange('tradeUOM')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField type="number" label="Trade Weight (kg)" fullWidth size="small" value={form.tradeWeightKg || ''} onChange={onChange('tradeWeightKg')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Trade Dimensions" fullWidth size="small" value={form.tradeDimensionsMM || ''} onChange={onChange('tradeDimensionsMM')} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Storage & Handling">
-                <Grid container spacing={2}>
-                  <Grid item xs={4}><TextField type="number" label="Shelf Life (days)" fullWidth size="small" value={form.shelfLifeDays || ''} onChange={onChange('shelfLifeDays')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Shelf Life UOM" fullWidth size="small" value={form.shelfLifeUom || ''} onChange={onChange('shelfLifeUom')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Storage Type" fullWidth size="small" value={form.storageType || ''} onChange={onChange('storageType')} disabled={!edit} /></Grid>
-                  <Grid item xs={4}><TextField label="Procurement Type" fullWidth size="small" value={form.procurementType || ''} onChange={onChange('procurementType')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField type="number" label="Temp Min (°C)" fullWidth size="small" value={form?.handlingParameter?.temperatureMin || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), temperatureMin: Number(e.target.value)}}))} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField type="number" label="Temp Max (°C)" fullWidth size="small" value={form?.handlingParameter?.temperatureMax || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), temperatureMax: Number(e.target.value)}}))} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField type="number" label="Humidity Min (%)" fullWidth size="small" value={form?.handlingParameter?.humidityMin || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), humidityMin: Number(e.target.value)}}))} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField type="number" label="Humidity Max (%)" fullWidth size="small" value={form?.handlingParameter?.humidityMax || ''} onChange={(e)=> setForm(f=> ({...f, handlingParameter: {...(f.handlingParameter||{}), humidityMax: Number(e.target.value)}}))} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Integration">
-                <Grid container spacing={2}>
-                  <Grid item xs={6}><TextField label="External ERP Code" fullWidth size="small" value={form.externalERPCode || ''} onChange={onChange('externalERPCode')} disabled={!edit} /></Grid>
-                  <Grid item xs={6}><TextField label="Packaging Material Code" fullWidth size="small" value={form.packagingMaterialCode || ''} onChange={onChange('packagingMaterialCode')} disabled={!edit} /></Grid>
-                </Grid>
-              </Section>
-
-              <Section title="Attachments">
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <FileUploader accept="image/*" onUpload={(file)=> MaterialsAPI.uploadImage(code, file)} />
-                  <FileUploader accept="application/pdf" onUpload={(file)=> MaterialsAPI.uploadDocument(code, file, 'Technical')} />
-                </Box>
-              </Section>
-            </Grid>
+                <Grid item xs={6}><TextField label="Hazmat Class" name="hazmatClass" value={form.hazmatClass} onChange={handleChange} fullWidth /></Grid>
+                <Grid item xs={6}><TextField label="UN Number" name="unNumber" value={form.unNumber} onChange={handleChange} fullWidth /></Grid>
               </>
             )}
           </Grid>
-        </Box>
-      )}
-
-      {tab !== 0 && (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-          <Typography>"{['Material Details','Bill Of Material','Storage Location','Supplier Details'][tab]}" screen is under construction.</Typography>
-        </Paper>
-      )}
-
-      <Snackbar open={toast.open} autoHideDuration={3000} onClose={()=> setToast(t=> ({...t, open:false}))}>
-        <Alert severity={toast.sev} sx={{ width: '100%' }}>{toast.msg}</Alert>
-      </Snackbar>
+        </TabPanel>
+      </Paper>
     </Box>
   );
 }

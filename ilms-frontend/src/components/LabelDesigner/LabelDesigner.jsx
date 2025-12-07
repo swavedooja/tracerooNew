@@ -1,50 +1,106 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Paper, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel, Divider, List, ListItem, ListItemText, ListItemIcon, IconButton } from '@mui/material';
-import { Save, TextFields, QrCode, ViewWeek, ArrowBack } from '@mui/icons-material';
+import { Box, Grid, Paper, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel, Divider, List, ListItem, ListItemText, ListItemIcon, IconButton, Chip, ToggleButton, ToggleButtonGroup, Tabs, Tab } from '@mui/material';
+import { Save, TextFields, QrCode, ViewWeek, ArrowBack, AddCircle, FormatBold, FormatItalic, FormatUnderlined, UploadFile, Preview } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import DesignerCanvas from './DesignerCanvas';
+import LabelPreview from '../LabelPreview';
 import { LabelTemplateAPI } from '../../services/APIService';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const DYNAMIC_FIELDS = [
     { label: 'Material Code', value: 'materialCode' },
     { label: 'Material Name', value: 'materialName' },
     { label: 'Description', value: 'description' },
-    { label: 'Batch Number', value: 'batchNumber' },
-    { label: 'Serial Number', value: 'serialNumber' },
-    { label: 'Expiry Date', value: 'expiryDate' },
-    { label: 'Manufacturing Date', value: 'mfgDate' },
+    { label: 'Batch No', value: 'batchNumber' },
+    { label: 'Serial No', value: 'serialNumber' },
+    { label: 'Expiry', value: 'expiryDate' },
+    { label: 'Mfg Date', value: 'mfgDate' },
     { label: 'Net Weight', value: 'netWeight' },
-    { label: 'Gross Weight', value: 'grossWeight' },
 ];
 
-export default function LabelDesigner() {
-    const { id } = useParams();
+const DUMMY_DATA = {
+    materialCode: 'MAT-12345678',
+    materialName: 'Premium Shampoo 500ml',
+    description: 'Anti-dandruff formulation with aloe vera.',
+    batchNumber: 'B-2023-10-001',
+    serialNumber: 'SN-9988776655',
+    expiryDate: '2025-12-31',
+    mfgDate: '2023-10-01',
+    netWeight: '500g',
+    grossWeight: '520g'
+};
+
+export default function LabelDesigner({ propTemplateId, onSaveSuccess, onClose }) {
+    const { id: paramId } = useParams();
     const navigate = useNavigate();
+    // Use prop if available (Modal mode), otherwise param (Route mode)
+    const id = propTemplateId || paramId;
+    const isModal = !!propTemplateId || !!onClose;
+
     const [template, setTemplate] = useState({
         name: 'New Template',
         levelName: 'ITEM',
         widthMm: 100,
         heightMm: 150,
-        status: 'DRAFT'
+        status: 'DRAFT',
+        unit: 'mm'
     });
     const [elements, setElements] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
+    const [tabValue, setTabValue] = useState(0);
+    const [previewOpen, setPreviewOpen] = useState(false);
 
     useEffect(() => {
-        if (id) load();
+        if (id) {
+            load();
+        } else {
+            // Reset for new template
+            setTemplate({
+                name: 'New Template',
+                levelName: 'ITEM',
+                widthMm: 100,
+                heightMm: 150,
+                status: 'DRAFT',
+                unit: 'mm'
+            });
+            setElements([]);
+        }
     }, [id]);
 
     const load = async () => {
         try {
             const data = await LabelTemplateAPI.get(id);
-            setTemplate(data);
-            if (data.layoutJson) {
-                setElements(JSON.parse(data.layoutJson));
+            const tpl = {
+                ...data,
+                widthMm: Number(data.width) || 100,
+                heightMm: Number(data.height) || 150
+            };
+            setTemplate(tpl);
+            if (data.canvas_design) {
+                const design = typeof data.canvas_design === 'string'
+                    ? JSON.parse(data.canvas_design)
+                    : data.canvas_design;
+                setElements(design || []);
             }
         } catch (e) {
             console.error(e);
         }
     };
+
+    // ... (addElement, updateSelected, insertField, handleImageUpload kept same via code structure, simplified here for replace)
+    // Redefining them here because check requires contiguous block replacement or carefully targeted.
+    // Since I'm replacing the top part, I need to ensure I don't lose the functions.
+    // The previous implementation had them inside the component. I should avoid replacing the whole component logic if possible 
+    // unless I provide all of it.
+    // Wait, replace_file_content replaces a block. The `addElement` etc are AFTER `load`.
+    // I will use specific small edits to avoid re-writing the whole file logic.
+
+    /* I will split this into two edits:
+       1. The component signature and `useEffect` load logic.
+       2. The `save` function and `return` (display) logic.
+    */
+
+    /* Edit 1: Signature and Load */
 
     const addElement = (type) => {
         const newEl = {
@@ -52,11 +108,14 @@ export default function LabelDesigner() {
             type,
             x: 10,
             y: 10,
-            content: type === 'text' ? 'Sample Text' : '',
-            contentType: 'STATIC', // STATIC or DYNAMIC
-            dynamicField: '',
+            width: type === 'text' ? 150 : 100,
+            height: type === 'text' ? 40 : 100,
+            formatString: type === 'text' ? 'Text' : '{materialCode}',
             fontSize: 14,
-            fontWeight: 'normal'
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            textDecoration: 'none',
+            src: ''
         };
         setElements([...elements, newEl]);
         setSelectedId(newEl.id);
@@ -66,134 +125,243 @@ export default function LabelDesigner() {
         setElements(elements.map(el => el.id === selectedId ? { ...el, [field]: value } : el));
     };
 
+    const insertField = (fieldValue) => {
+        const el = elements.find(e => e.id === selectedId);
+        if (el) {
+            const newFormatString = (el.formatString || '') + `{${fieldValue}}`;
+            updateSelected('formatString', newFormatString);
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const newEl = {
+                    id: Date.now(),
+                    type: 'image',
+                    x: 10,
+                    y: 10,
+                    width: 100,
+                    height: 100,
+                    src: evt.target.result
+                };
+                setElements([...elements, newEl]);
+                setSelectedId(newEl.id);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const save = async () => {
-        const payload = { ...template, layoutJson: JSON.stringify(elements) };
+        const payload = {
+            name: template.name,
+            type: template.levelName,
+            width: Number(template.widthMm),
+            height: Number(template.heightMm),
+            status: template.status || 'DRAFT',
+            canvas_design: elements,
+            unit: 'mm'
+        };
         try {
+            let savedData;
             if (id) {
-                await LabelTemplateAPI.update(id, payload);
+                savedData = await LabelTemplateAPI.update(id, payload);
             } else {
-                await LabelTemplateAPI.create(payload);
+                savedData = await LabelTemplateAPI.create(payload);
             }
-            navigate('/label-templates');
+            alert('Template saved successfully');
+            if (onSaveSuccess) onSaveSuccess(savedData);
         } catch (e) {
-            console.error(e);
-            alert('Save failed');
+            console.error('Save API Error:', e);
+            alert(`Save failed: ${e.message}`);
         }
     };
 
     const selectedElement = elements.find(el => el.id === selectedId);
 
     return (
-        <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-                <IconButton onClick={() => navigate('/label-templates')}><ArrowBack /></IconButton>
-                <Typography variant="h5" fontWeight="bold">{id ? 'Edit Template' : 'New Label Template'}</Typography>
+        <Box sx={{ height: isModal ? '80vh' : 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+            {/* Top Toolbar */}
+            <Paper elevation={0} sx={{ p: 1, borderBottom: '1px solid #ddd', display: 'flex', alignItems: 'center', gap: 2 }}>
+                {!isModal && <IconButton onClick={() => navigate('/label-templates')} size="small"><ArrowBack /></IconButton>}
+                {isModal && <IconButton onClick={onClose} size="small"><ArrowBack /></IconButton>}
+
+                <Typography variant="subtitle1" fontWeight="bold">{template.name}</Typography>
+                <Chip label={template.levelName} size="small" color="primary" variant="outlined" />
                 <Box sx={{ flexGrow: 1 }} />
-                <Button variant="contained" startIcon={<Save />} onClick={save}>Save</Button>
-            </Box>
+                <Button variant="outlined" size="small" startIcon={<Preview />} onClick={() => setPreviewOpen(true)} sx={{ mr: 1 }}>Preview</Button>
+                <Button variant="contained" size="small" startIcon={<Save />} onClick={save}>Save</Button>
+            </Paper>
 
-            <Grid container spacing={2}>
-                {/* Tools Panel */}
-                <Grid item xs={12} md={3}>
-                    <Paper variant="outlined" sx={{ p: 2, height: '100%' }}>
-                        <Typography variant="subtitle2" sx={{ mb: 2 }}>Properties</Typography>
-                        <TextField fullWidth size="small" label="Name" value={template.name} onChange={e => setTemplate({ ...template, name: e.target.value })} sx={{ mb: 2 }} />
-                        <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                            <InputLabel>Level</InputLabel>
-                            <Select value={template.levelName} label="Level" onChange={e => setTemplate({ ...template, levelName: e.target.value })}>
-                                <MenuItem value="ITEM">ITEM</MenuItem>
-                                <MenuItem value="BOX">BOX</MenuItem>
-                                <MenuItem value="PALLET">PALLET</MenuItem>
-                                <MenuItem value="CONTAINER">CONTAINER</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                            <TextField size="small" label="W (mm)" type="number" value={template.widthMm} onChange={e => setTemplate({ ...template, widthMm: Number(e.target.value) })} />
-                            <TextField size="small" label="H (mm)" type="number" value={template.heightMm} onChange={e => setTemplate({ ...template, heightMm: Number(e.target.value) })} />
-                        </Box>
+            <Grid container sx={{ flex: 1, overflow: 'hidden' }}>
+                {/* Left Sidebar: Assets */}
+                <Grid item xs={2} sx={{ borderRight: '1px solid #ddd', bgcolor: '#fafafa', display: 'flex', flexDirection: 'column' }}>
+                    <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} variant="fullWidth">
+                        <Tab label="Add" />
+                        <Tab label="Layers" />
+                    </Tabs>
+                    <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+                        {tabValue === 0 && (
+                            <List>
+                                <Typography variant="caption" color="text.secondary" fontWeight="bold">BASIC</Typography>
+                                <ListItem button onClick={() => addElement('text')} sx={{ border: '1px solid #eee', mb: 1, borderRadius: 1 }}>
+                                    <ListItemIcon><TextFields /></ListItemIcon>
+                                    <ListItemText primary="Text Box" />
+                                </ListItem>
+                                <ListItem button onClick={() => addElement('barcode')} sx={{ border: '1px solid #eee', mb: 1, borderRadius: 1 }}>
+                                    <ListItemIcon><ViewWeek /></ListItemIcon>
+                                    <ListItemText primary="1D Barcode" />
+                                </ListItem>
+                                <ListItem button onClick={() => addElement('qr')} sx={{ border: '1px solid #eee', mb: 1, borderRadius: 1 }}>
+                                    <ListItemIcon><QrCode /></ListItemIcon>
+                                    <ListItemText primary="QR Code" />
+                                </ListItem>
 
-                        <Divider sx={{ my: 2 }} />
-                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Add Element</Typography>
-                        <List>
-                            <ListItem button onClick={() => addElement('text')}>
-                                <ListItemIcon><TextFields /></ListItemIcon>
-                                <ListItemText primary="Text" />
-                            </ListItem>
-                            <ListItem button onClick={() => addElement('barcode')}>
-                                <ListItemIcon><ViewWeek /></ListItemIcon>
-                                <ListItemText primary="Barcode" />
-                            </ListItem>
-                            <ListItem button onClick={() => addElement('qr')}>
-                                <ListItemIcon><QrCode /></ListItemIcon>
-                                <ListItemText primary="QR Code" />
-                            </ListItem>
-                        </List>
-
-                        {selectedElement && (
-                            <>
-                                <Divider sx={{ my: 2 }} />
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Selected Element</Typography>
-
-                                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                                    <InputLabel>Content Type</InputLabel>
-                                    <Select
-                                        value={selectedElement.contentType || 'STATIC'}
-                                        label="Content Type"
-                                        onChange={e => updateSelected('contentType', e.target.value)}
+                                <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ mt: 2, display: 'block' }}>MEDIA</Typography>
+                                <Button component="label" fullWidth variant="outlined" startIcon={<UploadFile />} sx={{ mb: 1, textTransform: 'none' }}>
+                                    Upload Image
+                                    <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
+                                </Button>
+                            </List>
+                        )}
+                        {tabValue === 1 && (
+                            <List dense>
+                                {elements.map((el, i) => (
+                                    <ListItem
+                                        key={el.id}
+                                        button
+                                        selected={selectedId === el.id}
+                                        onClick={() => setSelectedId(el.id)}
                                     >
-                                        <MenuItem value="STATIC">Static Text</MenuItem>
-                                        <MenuItem value="DYNAMIC">Dynamic Field</MenuItem>
+                                        <ListItemText primary={`${el.type} ${i + 1}`} secondary={el.formatString || 'Image'} />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        )}
+                    </Box>
+                </Grid>
+
+                {/* Center: Canvas */}
+                <Grid item xs={7} sx={{ bgcolor: '#eee', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'auto', p: 4 }}>
+                    <DesignerCanvas
+                        width={template.widthMm * 3.78}
+                        height={template.heightMm * 3.78}
+                        elements={elements}
+                        setElements={setElements}
+                        selectedId={selectedId}
+                        setSelectedId={setSelectedId}
+                    />
+                </Grid>
+
+                {/* Right Sidebar: Properties */}
+                <Grid item xs={3} sx={{ borderLeft: '1px solid #ddd', bgcolor: 'white', display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ p: 2, borderBottom: '1px solid #eee' }}>
+                        <Typography variant="subtitle2" fontWeight="bold">Properties</Typography>
+                    </Box>
+                    <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+                        {!selectedElement ? (
+                            <Box>
+                                <Typography variant="caption" color="text.secondary">Template Settings</Typography>
+                                <TextField fullWidth size="small" label="Name" value={template.name} onChange={e => setTemplate({ ...template, name: e.target.value })} margin="dense" />
+                                <Grid container spacing={1}>
+                                    <Grid item xs={6}><TextField size="small" label="Width (mm)" type="number" value={template.widthMm} onChange={e => setTemplate({ ...template, widthMm: Number(e.target.value) })} margin="dense" /></Grid>
+                                    <Grid item xs={6}><TextField size="small" label="Height (mm)" type="number" value={template.heightMm} onChange={e => setTemplate({ ...template, heightMm: Number(e.target.value) })} margin="dense" /></Grid>
+                                </Grid>
+                                <FormControl fullWidth size="small" margin="dense">
+                                    <InputLabel>Type</InputLabel>
+                                    <Select value={template.levelName} label="Type" onChange={e => setTemplate({ ...template, levelName: e.target.value })}>
+                                        <MenuItem value="ITEM">ITEM</MenuItem>
+                                        <MenuItem value="BOX">BOX</MenuItem>
+                                        <MenuItem value="PALLET">PALLET</MenuItem>
                                     </Select>
                                 </FormControl>
+                            </Box>
+                        ) : (
+                            <Box>
+                                <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase' }}>{selectedElement.type} Settings</Typography>
 
-                                {selectedElement.contentType === 'DYNAMIC' ? (
-                                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                                        <InputLabel>Field</InputLabel>
-                                        <Select
-                                            value={selectedElement.dynamicField || ''}
-                                            label="Field"
-                                            onChange={e => updateSelected('dynamicField', e.target.value)}
-                                        >
-                                            {DYNAMIC_FIELDS.map(field => (
-                                                <MenuItem key={field.value} value={field.value}>
-                                                    {field.label}
-                                                </MenuItem>
+                                {selectedElement.type !== 'image' && (
+                                    <>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label="Content / Data"
+                                            value={selectedElement.formatString || ''}
+                                            onChange={e => updateSelected('formatString', e.target.value)}
+                                            multiline={selectedElement.type === 'text'}
+                                            rows={2}
+                                            margin="dense"
+                                            helperText="Dynamic: {materialCode}"
+                                        />
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                                            {DYNAMIC_FIELDS.map(f => (
+                                                <Chip key={f.value} label={f.label} size="small" onClick={() => insertField(f.value)} sx={{ fontSize: 10 }} clickable />
                                             ))}
-                                        </Select>
-                                    </FormControl>
-                                ) : (
-                                    <TextField
-                                        fullWidth
-                                        size="small"
-                                        label="Content"
-                                        value={selectedElement.content}
-                                        onChange={e => updateSelected('content', e.target.value)}
-                                        sx={{ mb: 2 }}
-                                    />
+                                        </Box>
+                                    </>
                                 )}
 
                                 {selectedElement.type === 'text' && (
-                                    <TextField fullWidth size="small" label="Font Size" type="number" value={selectedElement.fontSize} onChange={e => updateSelected('fontSize', Number(e.target.value))} sx={{ mb: 1 }} />
+                                    <>
+                                        <Divider sx={{ my: 1 }} />
+                                        <Typography variant="caption">Typography</Typography>
+                                        <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                                            <Grid item xs={6}>
+                                                <TextField type="number" size="small" label="Size" value={selectedElement.fontSize} onChange={e => updateSelected('fontSize', Number(e.target.value))} />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <ToggleButtonGroup
+                                                    size="small"
+                                                    value={[
+                                                        selectedElement.fontWeight === 'bold' ? 'bold' : null,
+                                                        selectedElement.fontStyle === 'italic' ? 'italic' : null,
+                                                        selectedElement.textDecoration === 'underline' ? 'under' : null,
+                                                    ].filter(Boolean)}
+                                                    onChange={(_, vals) => {
+                                                        updateSelected('fontWeight', vals.includes('bold') ? 'bold' : 'normal');
+                                                        updateSelected('fontStyle', vals.includes('italic') ? 'italic' : 'normal');
+                                                        updateSelected('textDecoration', vals.includes('under') ? 'underline' : 'none');
+                                                    }}
+                                                    aria-label="text formatting"
+                                                >
+                                                    <ToggleButton value="bold"><FormatBold /></ToggleButton>
+                                                    <ToggleButton value="italic"><FormatItalic /></ToggleButton>
+                                                    <ToggleButton value="under"><FormatUnderlined /></ToggleButton>
+                                                </ToggleButtonGroup>
+                                            </Grid>
+                                        </Grid>
+                                    </>
                                 )}
-                            </>
-                        )}
-                    </Paper>
-                </Grid>
 
-                {/* Canvas Area */}
-                <Grid item xs={12} md={9}>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', bgcolor: '#eee', p: 4, borderRadius: 2, overflow: 'auto' }}>
-                        <DesignerCanvas
-                            width={template.widthMm * 3.78} // approx px conversion
-                            height={template.heightMm * 3.78}
-                            elements={elements}
-                            setElements={setElements}
-                            selectedId={selectedId}
-                            setSelectedId={setSelectedId}
-                        />
+                                <Divider sx={{ my: 1 }} />
+                                <Typography variant="caption">Layout</Typography>
+                                <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                                    <Grid item xs={6}><TextField size="small" label="X" value={Math.round(selectedElement.x)} margin="dense" disabled /></Grid>
+                                    <Grid item xs={6}><TextField size="small" label="Y" value={Math.round(selectedElement.y)} margin="dense" disabled /></Grid>
+                                    <Grid item xs={6}><TextField size="small" label="W" value={Math.round(selectedElement.width)} onChange={e => updateSelected('width', Number(e.target.value))} margin="dense" /></Grid>
+                                    <Grid item xs={6}><TextField size="small" label="H" value={Math.round(selectedElement.height)} onChange={e => updateSelected('height', Number(e.target.value))} margin="dense" /></Grid>
+                                </Grid>
+                            </Box>
+                        )}
                     </Box>
                 </Grid>
             </Grid>
+            <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="md">
+                <DialogTitle>Label Preview</DialogTitle>
+                <DialogContent sx={{ bgcolor: '#eee', display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <LabelPreview
+                        width={template.widthMm * 3.78}
+                        height={template.heightMm * 3.78}
+                        elements={elements}
+                        data={DUMMY_DATA}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

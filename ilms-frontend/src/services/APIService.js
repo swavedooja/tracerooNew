@@ -1,92 +1,313 @@
-import axios from 'axios';
-import { mockData } from './mockData';
+import { supabase } from './supabaseClient';
 
-const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true' || process.env.NODE_ENV === 'production'; // Default to mock in production for GitHub Pages demo if not specified otherwise
-
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
-});
-
-// Helper to simulate network delay
-const mockDelay = (data, ms = 500) => new Promise(resolve => setTimeout(() => resolve(data), ms));
-
-// Helper to handle API calls with fallback to mock data
-const withFallback = (apiCall, mockResponse) => {
-  if (USE_MOCK) return mockDelay(mockResponse);
-  return apiCall().catch(err => {
-    console.warn('API call failed, falling back to mock data:', err);
-    return mockDelay(mockResponse);
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
   });
 };
 
 export const MaterialsAPI = {
-  list: (params) => withFallback(() => api.get('/materials', { params }).then(r => r.data), mockData.materials.list),
-  get: (code) => withFallback(() => api.get(`/materials/${code}`).then(r => r.data), mockData.materials.details(code)),
-  create: (payload) => withFallback(() => api.post('/materials', payload).then(r => r.data), { ...payload, id: 'MOCK-NEW-ID' }),
-  update: (code, payload) => withFallback(() => api.put(`/materials/${code}`, payload).then(r => r.data), { ...payload, material_code: code }),
-  remove: (code) => withFallback(() => api.delete(`/materials/${code}`).then(r => r.data), { success: true }),
-  images: (code) => withFallback(() => api.get(`/materials/${code}/images`).then(r => r.data), mockData.materials.images),
-  documents: (code) => withFallback(() => api.get(`/materials/${code}/documents`).then(r => r.data), mockData.materials.documents),
-  uploadImage: (code, file, type = 'material') => {
-    const mockResponse = { id: Math.random(), url: URL.createObjectURL(file), type };
-    if (USE_MOCK) return mockDelay(mockResponse);
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('type', type);
-    return api.post(`/materials/${code}/images`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      .then(r => r.data)
-      .catch(err => {
-        console.warn('Upload failed, falling back to mock:', err);
-        return mockDelay(mockResponse);
-      });
+  list: async () => {
+    const { data, error } = await supabase.from('materials').select('*');
+    if (error) throw error;
+    return data.map(transformMaterial);
   },
-  uploadDocument: (code, file, docType) => {
-    const mockResponse = { id: Math.random(), name: file.name, url: '#', type: docType };
-    if (USE_MOCK) return mockDelay(mockResponse);
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('docType', docType);
-    return api.post(`/materials/${code}/documents`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      .then(r => r.data)
-      .catch(err => {
-        console.warn('Upload failed, falling back to mock:', err);
-        return mockDelay(mockResponse);
-      });
+  get: async (code) => {
+    const { data, error } = await supabase.from('materials').select('*').eq('code', code).single();
+    if (error) throw error;
+    return transformMaterial(data);
   },
+  create: async (item) => {
+    const payload = {
+      id: generateUUID(),
+      code: item.code,
+      name: item.name,
+      description: item.description,
+      type: item.type,
+      category: item.category,
+      base_uom: item.baseUom,
+      is_batch_managed: item.isBatchManaged,
+      is_serial_managed: item.isSerialManaged,
+      shelf_life_days: item.shelfLifeDays,
+      min_stock: item.minStock,
+      max_stock: item.maxStock,
+      gross_weight: item.grossWeight,
+      net_weight: item.netWeight,
+      weight_uom: item.weightUom,
+      length: item.length,
+      width: item.width,
+      height: item.height,
+      dimension_uom: item.dimensionUom,
+      is_hazmat: item.isHazmat,
+      hazmat_class: item.hazmatClass,
+      un_number: item.unNumber,
+      status: item.status || 'ACTIVE'
+    };
+    const { data, error } = await supabase.from('materials').insert([payload]).select().single();
+    if (error) throw error;
+    return transformMaterial(data);
+  },
+  update: async (code, item) => {
+    const payload = {
+      name: item.name,
+      description: item.description,
+      type: item.type,
+      category: item.category,
+      base_uom: item.baseUom,
+      is_batch_managed: item.isBatchManaged,
+      is_serial_managed: item.isSerialManaged,
+      shelf_life_days: item.shelfLifeDays,
+      min_stock: item.minStock,
+      max_stock: item.maxStock,
+      gross_weight: item.grossWeight,
+      net_weight: item.netWeight,
+      weight_uom: item.weightUom,
+      length: item.length,
+      width: item.width,
+      height: item.height,
+      dimension_uom: item.dimensionUom,
+      is_hazmat: item.isHazmat,
+      hazmat_class: item.hazmatClass,
+      un_number: item.unNumber
+    };
+    const { data, error } = await supabase.from('materials').update(payload).eq('code', code).select().single();
+    if (error) throw error;
+    return transformMaterial(data);
+  },
+  remove: async (code) => {
+    const { error } = await supabase.from('materials').delete().eq('code', code);
+    if (error) throw error;
+  }
+};
+
+export const LocationAPI = {
+  list: async () => {
+    const { data, error } = await supabase.from('locations').select('*');
+    if (error) throw error;
+    return data.map(transformLocation);
+  },
+  getTree: async () => {
+    const { data, error } = await supabase.from('locations').select('*');
+    if (error) throw error;
+    return data.map(transformLocation);
+  },
+  getChildren: async (parentId) => {
+    let query = supabase.from('locations').select('*');
+    if (parentId === 'root' || !parentId) {
+      query = query.is('parent_id', null);
+    } else {
+      query = query.eq('parent_id', parentId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data.map(transformLocation);
+  },
+  get: async (code) => {
+    const { data, error } = await supabase.from('locations').select('*').eq('code', code).single();
+    if (error) throw error;
+    return transformLocation(data);
+  },
+  create: async (item) => {
+    const payload = {
+      id: generateUUID(),
+      code: item.code,
+      name: item.name,
+      type: item.type,
+      category: item.category,
+      parent_id: item.parentId,
+      address_line1: item.address,
+      status: 'ACTIVE'
+    };
+    const { data, error } = await supabase.from('locations').insert([payload]).select().single();
+    if (error) throw error;
+    return transformLocation(data);
+  },
+  update: async (code, item) => {
+    const payload = {
+      name: item.name,
+      type: item.type,
+      category: item.category,
+      parent_id: item.parentId,
+      address_line1: item.address
+    };
+    const { data, error } = await supabase.from('locations').update(payload).eq('code', code).select().single();
+    if (error) throw error;
+    return transformLocation(data);
+  },
+  getRoots: async () => {
+    const { data, error } = await supabase.from('locations').select('*').is('parent_id', null);
+    if (error) throw error;
+    return data.map(transformLocation);
+  },
+};
+
+export const MasterDefinitionsAPI = {
+  list: async () => {
+    const { data, error } = await supabase.from('master_definitions').select('*');
+    if (error) throw error;
+    return data.map(d => ({
+      id: d.id,
+      defType: d.def_type,
+      defValue: d.def_value,
+      description: d.description
+    }));
+  },
+  create: async (item) => {
+    const { data, error } = await supabase.from('master_definitions').insert([{
+      def_type: item.defType,
+      def_value: item.defValue,
+      description: item.description
+    }]).select().single();
+    if (error) throw error;
+    return data;
+  },
+  remove: async (id) => {
+    const { error } = await supabase.from('master_definitions').delete().eq('id', id);
+    if (error) throw error;
+  }
 };
 
 export const PackagingAPI = {
-  create: (payload) => withFallback(() => api.post('/packaging-hierarchy', payload).then(r => r.data), { ...payload, id: 'PKG-NEW' }),
-  get: (id) => withFallback(() => api.get(`/packaging-hierarchy/${id}`).then(r => r.data), mockData.packaging.get(id)),
-  update: (id, payload) => withFallback(() => api.put(`/packaging-hierarchy/${id}`, payload).then(r => r.data), { ...payload, id }),
-  remove: (id) => withFallback(() => api.delete(`/packaging-hierarchy/${id}`).then(r => r.data), { success: true }),
-  preview: (id) => withFallback(() => api.get(`/packaging-hierarchy/${id}/preview`).then(r => r.data), mockData.packaging.preview(id)),
-};
-
-export const WarehouseAPI = {
-  list: () => withFallback(() => api.get('/warehouses').then(r => r.data), mockData.warehouses.list),
-  get: (code) => withFallback(() => api.get(`/warehouses/${code}`).then(r => r.data), mockData.warehouses.details(code)),
-  create: (payload) => withFallback(() => api.post('/warehouses', payload).then(r => r.data), { ...payload, warehouse_code: 'WH-NEW' }),
-  update: (code, payload) => withFallback(() => api.put(`/warehouses/${code}`, payload).then(r => r.data), { ...payload, warehouse_code: code }),
-  remove: (code) => withFallback(() => api.delete(`/warehouses/${code}`).then(r => r.data), { success: true }),
-};
-
-export const LabelTemplateAPI = {
-  list: () => withFallback(() => api.get('/label-templates').then(r => r.data), mockData.labelTemplates.list),
-  get: (id) => withFallback(() => api.get(`/label-templates/${id}`).then(r => r.data), mockData.labelTemplates.details(id)),
-  create: (payload) => withFallback(() => api.post('/label-templates', payload).then(r => r.data), { ...payload, id: Math.floor(Math.random() * 1000) }),
-  update: (id, payload) => withFallback(() => api.put(`/label-templates/${id}`, payload).then(r => r.data), { ...payload, id }),
-  remove: (id) => withFallback(() => api.delete(`/label-templates/${id}`).then(r => r.data), { success: true }),
+  getHierarchies: async () => {
+    const { data, error } = await supabase.from('packaging_hierarchy').select('*');
+    if (error) throw error;
+    return data;
+  },
+  createHierarchy: async (item) => {
+    const { data, error } = await supabase.from('packaging_hierarchy').insert([item]).select().single();
+    if (error) throw error;
+    return data;
+  },
+  getLevels: async (hierarchyId) => {
+    const { data, error } = await supabase.from('packaging_level')
+      .select(`*, label_template:label_templates(name)`)
+      .eq('hierarchy_id', hierarchyId)
+      .order('level_order', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+  createLevel: async (item) => {
+    const { data, error } = await supabase.from('packaging_level').insert([item]).select().single();
+    if (error) throw error;
+    return data;
+  },
+  updateLevel: async (id, item) => {
+    const { data, error } = await supabase.from('packaging_level').update(item).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+  deleteLevel: async (id) => {
+    const { error } = await supabase.from('packaging_level').delete().eq('id', id);
+    if (error) throw error;
+  }
 };
 
 export const InventoryAPI = {
-  list: () => withFallback(() => api.get('/inventory').then(r => r.data), mockData.inventory.list),
-  registerBatch: (payload) => withFallback(() => api.post('/inventory/register-batch', payload).then(r => r.data), { success: true, ...payload }),
-  packBox: (payload) => withFallback(() => api.post('/inventory/pack-box', payload).then(r => r.data), { success: true, ...payload }),
+  list: async () => {
+    const { data, error } = await supabase.from('inventory').select(`
+            *,
+            material:materials(code, name),
+            location:locations(code, name)
+        `);
+    if (error) throw error;
+    return data.map(i => ({
+      id: i.id,
+      materialCode: i.material?.code,
+      materialName: i.material?.name,
+      serialNumber: i.serial_number,
+      batchNumber: i.batch_number,
+      status: i.status,
+      locationCode: i.location?.code,
+      locationName: i.location?.name,
+      createdAt: i.created_at
+    }));
+  },
+  create: async (item) => {
+    const payload = {
+      material_id: item.materialId,
+      serial_number: item.serialNumber,
+      batch_number: item.batchNumber,
+      status: item.status || 'REGISTERED',
+      location_id: item.locationId
+    };
+    const { data, error } = await supabase.from('inventory').insert([payload]).select().single();
+    if (error) throw error;
+    return data;
+  }
+};
+
+export const LabelTemplateAPI = {
+  list: async () => {
+    const { data, error } = await supabase.from('label_templates').select('*');
+    if (error) throw error;
+    return data;
+  },
+  get: async (id) => {
+    const { data, error } = await supabase.from('label_templates').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  },
+  create: async (item) => {
+    const { data, error } = await supabase.from('label_templates').insert([item]).select().single();
+    if (error) throw error;
+    return data;
+  },
+  update: async (id, item) => {
+    const { data, error } = await supabase.from('label_templates').update(item).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  }
 };
 
 export const TraceAPI = {
-  getHistory: (serial) => withFallback(() => api.get(`/trace/${serial}`).then(r => r.data), mockData.trace.history(serial)),
+  list: async () => {
+    const { data, error } = await supabase.from('trace_event').select('*');
+    if (error) throw error;
+    return data;
+  },
+  create: async (item) => {
+    const { data, error } = await supabase.from('trace_event').insert([item]).select().single();
+    if (error) throw error;
+    return data;
+  }
 };
 
-export default api;
+// --- Helpers ---
+
+const transformMaterial = (m) => ({
+  id: m.id,
+  code: m.code,
+  name: m.name,
+  description: m.description,
+  type: m.type,
+  category: m.category,
+  baseUom: m.base_uom,
+  isBatchManaged: m.is_batch_managed,
+  isSerialManaged: m.is_serial_managed,
+  shelfLifeDays: m.shelf_life_days,
+  minStock: m.min_stock,
+  maxStock: m.max_stock,
+  grossWeight: m.gross_weight,
+  netWeight: m.net_weight,
+  weightUom: m.weight_uom,
+  length: m.length,
+  width: m.width,
+  height: m.height,
+  dimensionUom: m.dimension_uom,
+  isHazmat: m.is_hazmat,
+  hazmatClass: m.hazmat_class,
+  unNumber: m.un_number,
+  status: m.status
+});
+
+const transformLocation = (l) => ({
+  id: l.id,
+  code: l.code,
+  name: l.name,
+  type: l.type,
+  category: l.category,
+  parentId: l.parent_id,
+  address: l.address_line1,
+  status: l.status
+});

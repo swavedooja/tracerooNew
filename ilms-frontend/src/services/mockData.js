@@ -1,110 +1,76 @@
 export const mockData = {
+    masterDefinitions: {
+        list: [
+            { id: 1, defType: 'MATERIAL_TYPE', defValue: 'RAW', description: 'Raw Material' },
+            { id: 2, defType: 'MATERIAL_TYPE', defValue: 'SEMI', description: 'Semi-Finished' },
+            { id: 3, defType: 'MATERIAL_TYPE', defValue: 'FIN', description: 'Finished Goods' },
+            { id: 4, defType: 'LOCATION_TYPE', defValue: 'WAREHOUSE', description: 'Warehouse Building' },
+            { id: 5, defType: 'LOCATION_TYPE', defValue: 'ZONE', description: 'Internal Zone' },
+            { id: 6, defType: 'LOCATION_TYPE', defValue: 'RACK', description: 'Storage Rack' },
+            { id: 7, defType: 'LOCATION_TYPE', defValue: 'BIN', description: 'Storage Bin' },
+        ]
+    },
     materials: {
         list: [
             {
-                material_code: 'MAT-001',
-                material_description: 'High Grade Steel Coil',
-                batch_number: 'BATCH-2023-001',
-                manufacturing_date: '2023-11-01',
-                expiry_date: '2024-11-01',
-                status: 'Active',
+                code: 'MAT-001',
+                name: 'High Grade Steel Coil',
+                description: 'Industrial Steel',
+                type: 'RAW',
+                category: 'MECHANICAL',
+                baseUOM: 'KG',
+                status: 'ACTIVE'
             },
             {
-                material_code: 'MAT-002',
-                material_description: 'Industrial Plastic Pellets',
-                batch_number: 'BATCH-2023-002',
-                manufacturing_date: '2023-11-05',
-                expiry_date: '2025-11-05',
-                status: 'Active',
-            },
-            {
-                material_code: 'MAT-003',
-                material_description: 'Copper Wire Spool',
-                batch_number: 'BATCH-2023-003',
-                manufacturing_date: '2023-11-10',
-                expiry_date: '2028-11-10',
-                status: 'Quarantine',
+                code: 'MAT-002',
+                name: 'iPhone 15 Pro',
+                description: 'Smartphone',
+                type: 'FIN',
+                category: 'ELECTRONICS',
+                baseUOM: 'EA',
+                status: 'ACTIVE'
             }
         ],
         details: (code) => ({
-            material_code: code,
-            material_description: 'Mock Material Description',
-            batch_number: 'BATCH-MOCK-001',
-            manufacturing_date: '2023-01-01',
-            expiry_date: '2024-01-01',
-            status: 'Active',
-            specifications: {
-                weight: '100kg',
-                dimensions: '10x10x10',
-            }
+            code: code,
+            name: 'Mock Material',
+            description: 'Mock Description',
+            type: 'RAW',
+            category: 'GENERAL',
+            baseUOM: 'EA',
+            status: 'ACTIVE',
+            isBatchManaged: true,
+            isSerialManaged: true,
+            shelfLifeDays: 365,
+            minStock: 100,
+            grossWeight: 10.5,
+            weightUOM: 'KG'
         }),
-        images: [
-            { id: 1, url: 'https://via.placeholder.com/300?text=Material+Image+1', type: 'material' },
-            { id: 2, url: 'https://via.placeholder.com/300?text=Material+Image+2', type: 'material' }
-        ],
-        documents: [
-            { id: 1, name: 'Safety_Sheet.pdf', url: '#', type: 'safety' },
-            { id: 2, name: 'Spec_Sheet.pdf', url: '#', type: 'spec' }
-        ]
+        images: [],
+        documents: []
     },
+    locations: {
+        list: [
+            { id: 'L1', code: 'WH-001', name: 'Central Distribution Hub', type: 'WAREHOUSE', category: 'GENERAL', addressLine1: 'New York, USA' },
+            { id: 'L2', code: 'WH-002', name: 'West Coast Facility', type: 'WAREHOUSE', category: 'COLD_CHAIN', addressLine1: 'California, USA' },
+            { id: 'L3', code: 'ZN-A', name: 'Zone A', type: 'ZONE', category: 'GENERAL', parent: { code: 'WH-001' } }
+        ],
+        details: (code) => ({
+            code: code,
+            name: 'Mock Location',
+            type: 'WAREHOUSE',
+            category: 'GENERAL',
+            addressLine1: 'Mock Address',
+            capacityVolume: 1000.0,
+            gln: '1234567890123'
+        })
+    },
+    // ... keep other mocks if needed, truncated for brevity in this specific update unless required
     packaging: {
-        get: (id) => ({
-            id: id || 'PKG-001',
-            type: 'Pallet',
-            status: 'In-Stock',
-            items: [
-                { id: 'BOX-001', type: 'Box', content: 'MAT-001' },
-                { id: 'BOX-002', type: 'Box', content: 'MAT-001' }
-            ],
-            qr_code: 'https://via.placeholder.com/150?text=QR+Code'
-        }),
-        preview: (id) => ({
-            id: id || 'PKG-001',
-            preview_url: 'https://via.placeholder.com/400?text=Label+Preview'
-        })
+        get: (id) => ({ id: id || 'PKG-001', type: 'Pallet' }),
+        preview: (id) => ({ preview_url: '#' })
     },
-    warehouses: {
-        list: [
-            { warehouse_code: 'WH-001', name: 'Central Distribution Hub', location: 'New York, USA', capacity: 10000 },
-            { warehouse_code: 'WH-002', name: 'West Coast Facility', location: 'California, USA', capacity: 5000 },
-            { warehouse_code: 'WH-003', name: 'European Depot', location: 'Berlin, Germany', capacity: 8000 }
-        ],
-        details: (code) => ({
-            warehouse_code: code,
-            name: 'Mock Warehouse',
-            location: 'Mock Location',
-            capacity: 1000,
-            sections: ['A1', 'A2', 'B1']
-        })
-    },
-    labelTemplates: {
-        list: [
-            { id: 1, name: 'Standard Pallet Label', dimensions: '4x6', format: 'ZPL' },
-            { id: 2, name: 'Small Box Label', dimensions: '2x4', format: 'PDF' }
-        ],
-        details: (id) => ({
-            id: id,
-            name: 'Mock Template',
-            content: 'Mock Template Content'
-        })
-    },
-    inventory: {
-        list: [
-            { id: 1, material_code: 'MAT-001', quantity: 500, location: 'WH-001-A1' },
-            { id: 2, material_code: 'MAT-002', quantity: 1200, location: 'WH-002-B1' }
-        ]
-    },
-    trace: {
-        history: (serial) => ({
-            serial_number: serial,
-            current_status: 'Delivered',
-            timeline: [
-                { date: '2023-11-01 08:00', status: 'Manufactured', location: 'Factory A' },
-                { date: '2023-11-02 10:00', status: 'Quality Check Passed', location: 'Factory A' },
-                { date: '2023-11-03 14:00', status: 'Shipped', location: 'Transit' },
-                { date: '2023-11-05 09:00', status: 'Received', location: 'WH-001' },
-                { date: '2023-11-10 16:00', status: 'Delivered', location: 'Customer Site' }
-            ]
-        })
-    }
+    labelTemplates: { list: [], details: (id) => ({}) },
+    inventory: { list: [] },
+    trace: { history: (serial) => ({}) }
 };

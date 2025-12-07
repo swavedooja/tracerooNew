@@ -3,24 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://swavedooja.github.io/traceroo",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
   "dependencies": {
+    "@babel/preset-env": "7.26.0",
+    "@babel/preset-react": "7.26.3",
     "@emotion/react": "11.13.0",
     "@emotion/styled": "11.13.0",
     "@mui/icons-material": "5.15.20",
     "@mui/material": "5.15.20",
+    "@supabase/supabase-js": "^2.86.2",
     "axios": "1.7.7",
-    "framer-motion": "^12.23.24",
-    "react": "18.2.0",
-    "@babel/preset-env": "7.26.0",
-    "@babel/preset-react": "7.26.3",
     "babel-loader": "9.2.1",
     "copy-webpack-plugin": "^13.0.1",
     "css-loader": "7.1.2",
+    "framer-motion": "^12.23.24",
     "gh-pages": "^6.3.0",
     "html-webpack-plugin": "^5.6.5",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^3.0.4",
+    "qrcode.react": "^4.2.0",
+    "react": "18.2.0",
+    "react-barcode": "^1.6.1",
+    "react-dom": "^18.3.1",
+    "react-draggable": "^4.5.0",
+    "react-intersection-observer": "^10.0.0",
+    "react-resizable": "^3.0.5",
+    "react-router-dom": "^7.10.1",
     "style-loader": "4.0.0",
     "webpack": "5.95.0",
     "webpack-cli": "5.1.4",
     "webpack-dev-server": "5.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.5"
   }
 }

@@ -286,41 +286,7 @@ export default function Dashboard() {
                 >
                   Integrated Logistics Management System for seamless supply chain operations
                 </Typography>
-                <Stack direction="row" spacing={1.5}>
-                  <Button
-                    variant="contained"
-                    size="medium"
-                    endIcon={<ArrowForward />}
-                    sx={{
-                      bgcolor: 'white',
-                      color: 'primary.main',
-                      px: 3,
-                      py: 1,
-                      '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        transform: 'scale(1.03)',
-                      },
-                    }}
-                  >
-                    Get Started
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="medium"
-                    sx={{
-                      borderColor: 'white',
-                      color: 'white',
-                      px: 3,
-                      py: 1,
-                      '&:hover': {
-                        borderColor: 'white',
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                      },
-                    }}
-                  >
-                    Learn More
-                  </Button>
-                </Stack>
+
               </AnimatedBox>
             </Grid>
             <Grid item xs={12} md={5}>
@@ -429,9 +395,8 @@ export default function Dashboard() {
                         width: 60,
                         height: 60,
                         borderRadius: '50%',
-                        background: `linear-gradient(135deg, ${index % 2 === 0 ? '#1976D2' : '#42A5F5'}, ${
-                          index % 2 === 0 ? '#42A5F5' : '#90CAF9'
-                        })`,
+                        background: `linear-gradient(135deg, ${index % 2 === 0 ? '#1976D2' : '#42A5F5'}, ${index % 2 === 0 ? '#42A5F5' : '#90CAF9'
+                          })`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -521,31 +486,7 @@ export default function Dashboard() {
               filter: 'blur(40px)',
             }}
           />
-          <CardContent sx={{ p: 4, textAlign: 'center', position: 'relative' }}>
-            <Typography variant="h4" sx={{ mb: 1.5, fontWeight: 700 }}>
-              Ready to Get Started?
-            </Typography>
-            <Typography variant="subtitle1" sx={{ mb: 3, opacity: 0.9 }}>
-              Join thousands of companies optimizing their logistics operations
-            </Typography>
-            <Button
-              variant="contained"
-              size="medium"
-              sx={{
-                bgcolor: 'white',
-                color: 'primary.main',
-                px: 4,
-                py: 1,
-                fontSize: '1rem',
-                '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.9)',
-                  transform: 'scale(1.03)',
-                },
-              }}
-            >
-              Start Free Trial
-            </Button>
-          </CardContent>
+
         </AnimatedCard>
       </Container>
     </Box>

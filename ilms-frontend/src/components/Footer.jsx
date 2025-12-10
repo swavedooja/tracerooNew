@@ -272,7 +272,7 @@ export default function Footer() {
             spacing={2}
           >
             <Typography variant="body2" sx={{ opacity: 0.7 }}>
-              © {new Date().getFullYear()} TraceRoo. All rights reserved. Powered by DOPS | Last Updated: Dec 11, 2025, 04:55 IST
+              © {new Date().getFullYear()} TraceRoo. All rights reserved. Powered by DOPS | Last Updated: Dec 11, 2025, 05:16 IST
             </Typography>
             <Stack direction="row" spacing={3}>
               <Link

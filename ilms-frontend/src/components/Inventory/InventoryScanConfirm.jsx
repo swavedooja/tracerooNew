@@ -34,7 +34,9 @@ import {
     Clear,
     Refresh,
     LocationOn,
-    Inventory2
+    Inventory2,
+    CameraAlt,
+    Close
 } from '@mui/icons-material';
 import { InventoryAPI, LocationAPI, SerialPoolAPI } from '../../services/APIService';
 
@@ -47,6 +49,9 @@ export default function InventoryScanConfirm() {
     const [stats, setStats] = useState({ total: 0, confirmed: 0, failed: 0 });
     const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
     const [detailDialog, setDetailDialog] = useState({ open: false, item: null });
+    const [cameraOpen, setCameraOpen] = useState(false);
+    const videoRef = useRef(null);
+    const streamRef = useRef(null);
 
     const inputRef = useRef(null);
 
@@ -172,6 +177,39 @@ export default function InventoryScanConfirm() {
             : <Error color="error" />;
     };
 
+    // Camera scanning functions
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+            }
+            setCameraOpen(true);
+        } catch (err) {
+            console.error('Camera access denied:', err);
+            setToast({ open: true, message: 'Camera access denied. Please allow camera permissions.', severity: 'error' });
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        setCameraOpen(false);
+    };
+
+    const handleCameraCapture = () => {
+        // For demo: close camera and prompt manual entry
+        // In production, integrate with BarcodeDetector API or a library like @zxing/library
+        stopCamera();
+        setToast({ open: true, message: 'Camera scan captured. Enter the code manually if not auto-detected.', severity: 'info' });
+        inputRef.current?.focus();
+    };
+
     const successCount = scanHistory.filter(s => s.status === 'SUCCESS').length;
     const failCount = scanHistory.filter(s => s.status === 'FAILED').length;
 
@@ -249,10 +287,20 @@ export default function InventoryScanConfirm() {
                                         <Search />
                                     </InputAdornment>
                                 ),
-                                endAdornment: scanInput && (
+                                endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton size="small" onClick={() => setScanInput('')}>
-                                            <Clear />
+                                        {scanInput && (
+                                            <IconButton size="small" onClick={() => setScanInput('')}>
+                                                <Clear />
+                                            </IconButton>
+                                        )}
+                                        <IconButton
+                                            size="small"
+                                            onClick={startCamera}
+                                            sx={{ color: 'primary.main', ml: 0.5 }}
+                                            title="Scan with camera"
+                                        >
+                                            <CameraAlt />
                                         </IconButton>
                                     </InputAdornment>
                                 )
@@ -382,13 +430,15 @@ export default function InventoryScanConfirm() {
                                                 style={{ cursor: scan.itemData ? 'pointer' : 'default' }}
                                             >
                                                 <TableCell>{getStatusIcon(scan.status)}</TableCell>
-                                                <TableCell>
-                                                    <Typography variant="body2" fontFamily="monospace" fontWeight="bold">
+                                                <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <Typography variant="body2" fontFamily="monospace" fontWeight="bold" noWrap>
                                                         {scan.serialNumber}
                                                     </Typography>
                                                 </TableCell>
-                                                <TableCell>{scan.message}</TableCell>
-                                                <TableCell>
+                                                <TableCell sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    <Typography variant="body2" noWrap>{scan.message}</Typography>
+                                                </TableCell>
+                                                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                                                     {scan.timestamp.toLocaleTimeString()}
                                                 </TableCell>
                                             </TableRow>
@@ -423,6 +473,43 @@ export default function InventoryScanConfirm() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDetailDialog({ open: false, item: null })}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Camera Dialog */}
+            <Dialog open={cameraOpen} onClose={stopCamera} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Scan Barcode
+                    <IconButton onClick={stopCamera}><Close /></IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ position: 'relative', width: '100%', bgcolor: 'black', borderRadius: 1, overflow: 'hidden' }}>
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            style={{ width: '100%', maxHeight: 400 }}
+                        />
+                        <Box sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            border: '2px solid #4caf50',
+                            width: '70%',
+                            height: '40%',
+                            borderRadius: 1
+                        }} />
+                    </Box>
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                        Position the barcode within the green frame. Tap "Capture" when ready.
+                    </Alert>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={stopCamera}>Cancel</Button>
+                    <Button variant="contained" onClick={handleCameraCapture} startIcon={<CameraAlt />}>
+                        Capture
+                    </Button>
                 </DialogActions>
             </Dialog>
 

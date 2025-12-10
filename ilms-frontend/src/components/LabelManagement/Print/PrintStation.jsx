@@ -6,7 +6,7 @@ import {
     TextField, Chip, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions,
     Alert, LinearProgress, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
-import { ArrowBack, CloudUpload, Print, Calculate, CheckCircle, Error as ErrorIcon, Preview } from '@mui/icons-material';
+import { ArrowBack, CloudUpload, Print, Calculate, CheckCircle, Error as ErrorIcon, Preview, Download } from '@mui/icons-material';
 import { PackagingAPI } from '../../../services/APIService';
 import LabelPreview from '../../LabelPreview';
 
@@ -118,6 +118,45 @@ export default function PrintStation() {
         if (actual === 0) return { status: 'missing', color: 'default', text: 'Not Uploaded' };
         if (actual !== expected) return { status: 'mismatch', color: 'error', text: `Mismatch: ${actual}/${expected}` };
         return { status: 'ok', color: 'success', text: `Uploaded (${actual})` };
+    };
+
+    // Generate sample CSV with dummy data for a level
+    const generateSampleCSV = (levelId) => {
+        const level = levels.find(l => l.id === levelId);
+        const count = calculatedCounts[levelId] || 10;
+
+        // Common fields that might be used in labels
+        const headers = ['serialNumber', 'batchNumber', 'materialCode', 'materialName', 'expiryDate', 'mfgDate', 'netWeight'];
+
+        // Generate dummy rows
+        const rows = [];
+        const today = new Date();
+        const expiryDate = new Date(today);
+        expiryDate.setFullYear(today.getFullYear() + 2);
+
+        for (let i = 1; i <= count; i++) {
+            rows.push([
+                `SN-${today.toLocaleDateString('en-GB').replace(/\//g, '')}-${String(i).padStart(5, '0')}`,
+                `BATCH-${today.getFullYear()}-${String(Math.floor(Math.random() * 100)).padStart(3, '0')}`,
+                `MAT-${String(1000 + i).padStart(8, '0')}`,
+                `Sample Product ${level?.level_name || 'Item'} #${i}`,
+                expiryDate.toISOString().split('T')[0],
+                today.toISOString().split('T')[0],
+                `${(Math.random() * 500 + 100).toFixed(0)}g`
+            ]);
+        }
+
+        // Create CSV content
+        const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+        // Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `sample_${level?.level_name || 'data'}_${count}_rows.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // Step 3: Render Imposition Preview for a level
@@ -275,6 +314,16 @@ export default function PrintStation() {
                                                 <Button component="label" variant="outlined" size="small" startIcon={<CloudUpload />}>
                                                     Upload CSV
                                                     <input type="file" hidden accept=".csv" onChange={(e) => handleFileUpload(l.id, e)} />
+                                                </Button>
+                                                <Button
+                                                    variant="text"
+                                                    size="small"
+                                                    startIcon={<Download />}
+                                                    onClick={() => generateSampleCSV(l.id)}
+                                                    sx={{ ml: 1 }}
+                                                    title="Download sample CSV with dummy data"
+                                                >
+                                                    Sample
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

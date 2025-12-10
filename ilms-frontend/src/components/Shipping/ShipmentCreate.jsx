@@ -49,7 +49,8 @@ import {
     Person,
     DirectionsCar,
     Phone,
-    QrCodeScanner
+    QrCodeScanner,
+    PlayArrow
 } from '@mui/icons-material';
 import { ShipmentAPI, ContainerAPI, LocationAPI } from '../../services/APIService';
 
@@ -61,6 +62,64 @@ const SHIPMENT_STATUSES = {
     DELIVERED: { color: 'success', label: 'Delivered' },
     CANCELLED: { color: 'error', label: 'Cancelled' }
 };
+
+// Demo shipments for demonstration
+const DEMO_SHIPMENTS = [
+    {
+        id: 'demo-1',
+        shipment_number: 'SHP-20241210-001',
+        status: 'DELIVERED',
+        origin_name: 'Mumbai Warehouse',
+        destination_name: 'Delhi Distribution Center',
+        carrier: 'BlueDart Express',
+        item_count: 48,
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        dispatched_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        delivered_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+        id: 'demo-2',
+        shipment_number: 'SHP-20241210-002',
+        status: 'IN_TRANSIT',
+        origin_name: 'Chennai Factory',
+        destination_name: 'Bangalore Hub',
+        carrier: 'DTDC',
+        item_count: 120,
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        dispatched_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+        id: 'demo-3',
+        shipment_number: 'SHP-20241210-003',
+        status: 'DISPATCHED',
+        origin_name: 'Pune Warehouse',
+        destination_name: 'Hyderabad DC',
+        carrier: 'Delhivery',
+        item_count: 36,
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        dispatched_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+    },
+    {
+        id: 'demo-4',
+        shipment_number: 'SHP-20241210-004',
+        status: 'CREATED',
+        origin_name: 'Kolkata Hub',
+        destination_name: 'Jaipur Warehouse',
+        carrier: 'FedEx',
+        item_count: 0,
+        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    },
+    {
+        id: 'demo-5',
+        shipment_number: 'SHP-20241210-005',
+        status: 'LOADING',
+        origin_name: 'Mumbai Warehouse',
+        destination_name: 'Ahmedabad DC',
+        carrier: 'Ecom Express',
+        item_count: 24,
+        created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+    }
+];
 
 export default function ShipmentCreate() {
     const [locations, setLocations] = useState([]);
@@ -122,6 +181,14 @@ export default function ShipmentCreate() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const [isDemo, setIsDemo] = useState(false);
+
+    const loadDemoData = () => {
+        setShipments(DEMO_SHIPMENTS);
+        setIsDemo(true);
+        setToast({ open: true, message: 'Demo shipments loaded successfully!', severity: 'success' });
     };
 
     const loadShipmentItems = async (shipmentId) => {
@@ -269,9 +336,20 @@ export default function ShipmentCreate() {
 
     return (
         <Box>
-            <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LocalShipping color="primary" /> Shipment Management
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocalShipping color="primary" /> Shipment Management
+                    {isDemo && <Chip label="Demo Data" color="info" size="small" sx={{ ml: 1 }} />}
+                </Typography>
+                <Button
+                    variant="outlined"
+                    startIcon={<PlayArrow />}
+                    onClick={loadDemoData}
+                    size="small"
+                >
+                    Load Demo Data
+                </Button>
+            </Box>
 
             <Stepper activeStep={activeStep} sx={{ mb: 3 }}>
                 {steps.map((label) => (

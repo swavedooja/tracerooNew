@@ -77,8 +77,8 @@ function NavBar({ onLogout }) {
       icon: DashboardIcon,
       stateKey: 'dashboardOpen',
       children: [
-        { label: 'Home', icon: DashboardIcon, path: '/' },
-        { label: 'Operations', icon: Timeline, path: '/dashboard/operations' },
+        { label: 'Operations', icon: Timeline, path: '/' },
+        { label: 'Home', icon: DashboardIcon, path: '/dashboard/home' },
       ]
     },
     {
@@ -261,8 +261,8 @@ export default function App() {
       <NavBar onLogout={() => setIsAuthenticated(false)} />
       <Container maxWidth="xl" sx={{ mt: { xs: 2, sm: 3 }, mb: { xs: 3, sm: 6 }, flex: 1, display: 'flex', flexDirection: 'column', px: { xs: 1, sm: 2, md: 3 } }}>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard/operations" element={<DashboardMetrics />} />
+          <Route path="/" element={<DashboardMetrics />} />
+          <Route path="/dashboard/home" element={<Dashboard />} />
           <Route path="/materials/new" element={<MaterialCreate />} />
           <Route path="/materials/:code" element={<MaterialForm />} />
           <Route path="/materials" element={<MaterialList />} />

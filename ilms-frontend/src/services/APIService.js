@@ -752,6 +752,34 @@ export const TraceAPI = {
     }
 
     return null;
+  },
+
+  getHistory: async (serialOrContainerId) => {
+    // First try to search for item
+    const result = await TraceAPI.searchBySerial(serialOrContainerId);
+
+    if (!result) {
+      return null;
+    }
+
+    // Get timeline based on type
+    if (result.type === 'INVENTORY') {
+      try {
+        const data = await TraceAPI.getItemTimeline(serialOrContainerId);
+        return { ...result, events: data };
+      } catch (e) {
+        console.log('Timeline fetch failed, returning basic result');
+        return result;
+      }
+    } else {
+      try {
+        const data = await TraceAPI.getContainerTimeline(serialOrContainerId);
+        return { ...result, events: data };
+      } catch (e) {
+        console.log('Timeline fetch failed, returning basic result');
+        return result;
+      }
+    }
   }
 };
 

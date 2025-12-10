@@ -329,17 +329,19 @@ export default function AggregationStation() {
 
                                 <TextField
                                     inputRef={inputRef}
-                                    label="Scan Container Barcode"
                                     fullWidth
                                     value={scanInput}
                                     onChange={(e) => setScanInput(e.target.value)}
                                     onKeyPress={handleKeyPress}
                                     onFocus={() => setScanMode('CONTAINER')}
+                                    placeholder="Scan container barcode..."
                                     sx={{
                                         mb: 2,
                                         '& .MuiOutlinedInput-root': {
-                                            bgcolor: 'white'
-                                        }
+                                            bgcolor: 'white',
+                                            '& fieldset': { borderColor: 'transparent' }
+                                        },
+                                        '& .MuiInputLabel-root': { display: 'none' }
                                     }}
                                     InputProps={{
                                         startAdornment: <InputAdornment position="start"><Search /></InputAdornment>
@@ -452,14 +454,20 @@ export default function AggregationStation() {
 
                             <TextField
                                 inputRef={inputRef}
-                                label="Scan Item Barcode"
                                 fullWidth
                                 value={scanInput}
                                 onChange={(e) => setScanInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 onFocus={() => setScanMode('ITEM')}
                                 autoFocus
-                                sx={{ mb: 2 }}
+                                placeholder="Scan item barcode..."
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': { borderColor: 'rgba(0,0,0,0.23)' }
+                                    },
+                                    '& .MuiInputLabel-root': { display: 'none' }
+                                }}
                                 InputProps={{
                                     startAdornment: <InputAdornment position="start"><QrCodeScanner /></InputAdornment>,
                                     endAdornment: scanInput && (

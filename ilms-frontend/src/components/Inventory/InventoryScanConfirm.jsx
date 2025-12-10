@@ -226,7 +226,7 @@ export default function InventoryScanConfirm() {
                         variant="outlined"
                         sx={{
                             p: 3,
-                            background: 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
+                            background: 'linear-gradient(135deg, #334155 0%, #475569 100%)',
                             color: 'white'
                         }}
                     >
@@ -237,16 +237,17 @@ export default function InventoryScanConfirm() {
                         {/* Location Selector */}
                         <TextField
                             select
-                            label="Scan Location"
                             fullWidth
                             value={selectedLocation}
                             onChange={(e) => setSelectedLocation(e.target.value)}
+                            placeholder="Select Location"
                             sx={{
                                 mb: 3,
                                 '& .MuiOutlinedInput-root': {
-                                    bgcolor: 'rgba(255,255,255,0.9)',
+                                    bgcolor: 'white',
                                     '& fieldset': { borderColor: 'transparent' }
-                                }
+                                },
+                                '& .MuiInputLabel-root': { display: 'none' }
                             }}
                             InputProps={{
                                 startAdornment: (
@@ -266,7 +267,6 @@ export default function InventoryScanConfirm() {
                         {/* Scan Input */}
                         <TextField
                             inputRef={inputRef}
-                            label="Serial Number / Barcode"
                             fullWidth
                             value={scanInput}
                             onChange={(e) => setScanInput(e.target.value)}
@@ -279,7 +279,8 @@ export default function InventoryScanConfirm() {
                                     bgcolor: 'white',
                                     fontSize: '1.2rem',
                                     '& fieldset': { borderColor: 'transparent' }
-                                }
+                                },
+                                '& .MuiInputLabel-root': { display: 'none' }
                             }}
                             InputProps={{
                                 startAdornment: (

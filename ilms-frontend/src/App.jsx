@@ -38,7 +38,8 @@ import Registration from './components/Inventory/Registration';
 import SerialGeneration from './components/Inventory/SerialGeneration';
 import InventoryScanConfirm from './components/Inventory/InventoryScanConfirm';
 import PackingStation from './components/Inventory/PackingStation';
-import SearchPortal from './components/Trace/SearchPortal';
+import TrackTraceDashboard from './components/Trace/TrackTraceDashboard';
+import ChainTrackDashboard from './components/Trace/ChainTrackDashboard';
 import Dashboard from './components/Dashboard';
 import DashboardMetrics from './components/Dashboard/DashboardMetrics';
 import ShipmentCreate from './components/Shipping/ShipmentCreate';
@@ -79,6 +80,7 @@ function NavBar({ onLogout }) {
       children: [
         { label: 'Operations', icon: Timeline, path: '/' },
         { label: 'Home', icon: DashboardIcon, path: '/dashboard/home' },
+        { label: 'ChainTrack', icon: Timeline, path: '/chaintrack' },
       ]
     },
     {
@@ -280,7 +282,8 @@ export default function App() {
           <Route path="/packing" element={<PackingDashboard />} />
           <Route path="/packing/aggregation" element={<AggregationStation />} />
           <Route path="/shipping" element={<ShipmentCreate />} />
-          <Route path="/trace" element={<SearchPortal />} />
+          <Route path="/trace" element={<TrackTraceDashboard />} />
+          <Route path="/chaintrack" element={<ChainTrackDashboard />} />
         </Routes>
       </Container>
       <Footer />

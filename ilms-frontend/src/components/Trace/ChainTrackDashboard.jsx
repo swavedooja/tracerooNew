@@ -334,22 +334,7 @@ export default function ChainTrackDashboard() {
         <Box sx={{ bgcolor: THEME.bg, minHeight: '100vh', color: THEME.text.primary, p: 3 }}>
             {/* Top Navigation Bar */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Typography variant="h5" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Inventory2 sx={{ color: THEME.text.accent }} /> ChainTrack
-                    </Typography>
-                    {['Dashboard', 'Inventory', 'Orders', 'Reports'].map((item) => (
-                        <Link
-                            key={item}
-                            href="#"
-                            underline="none"
-                            color={item === (view === 'OVERVIEW' ? 'Dashboard' : 'Inventory') ? 'white' : 'text.secondary'}
-                            fontWeight={item === (view === 'OVERVIEW' ? 'Dashboard' : 'Inventory') ? 'bold' : 'normal'}
-                        >
-                            {item}
-                        </Link>
-                    ))}
-                </Box>
+
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Paper sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 250, bgcolor: '#1F2937', color: 'white' }}>
                         <InputBase sx={{ ml: 1, flex: 1, color: 'inherit', fontSize: 14 }} placeholder="Search SSCC / GTIN" />

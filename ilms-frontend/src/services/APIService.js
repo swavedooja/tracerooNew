@@ -181,7 +181,7 @@ export const PackagingAPI = {
   },
   getLevels: async (hierarchyId) => {
     const { data, error } = await supabase.from('packaging_level')
-      .select(`*, label_template:label_templates(name)`)
+      .select(`*, label_template:label_templates(*)`)
       .eq('hierarchy_id', hierarchyId)
       .order('level_order', { ascending: true });
     if (error) throw error;

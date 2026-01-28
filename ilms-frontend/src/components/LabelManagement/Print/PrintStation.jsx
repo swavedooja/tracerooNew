@@ -219,6 +219,32 @@ export default function PrintStation() {
 
     return (
         <Box sx={{ p: 3 }}>
+            <style>
+                {`
+                    @media print {
+                        body * {
+                            visibility: hidden;
+                        }
+                        #print-area, #print-area * {
+                            visibility: visible;
+                        }
+                        #print-area {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            margin: 0;
+                            padding: 0;
+                            border: none !important;
+                            box-shadow: none !important;
+                        }
+                        @page {
+                            size: ${paperSize} portrait;
+                            margin: 10mm;
+                        }
+                    }
+                `}
+            </style>
             <Button startIcon={<ArrowBack />} onClick={() => navigate('/labels')} sx={{ mb: 2 }}>Back</Button>
             <Typography variant="h5" fontWeight="bold" gutterBottom>Bulk Label Printing</Typography>
 

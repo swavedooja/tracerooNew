@@ -1,22 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Grid, Paper, TextField, Typography, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip } from '@mui/material';
 import { Add, Delete, Edit, Link as LinkIcon, Print } from '@mui/icons-material';
-import { PackagingAPI } from '../../../services/APIService';
-import LabelDesigner from '../../LabelDesigner/LabelDesigner';
+import { PackagingAPI } from '../../services/APIService';
+import LabelDesigner from '../LabelDesigner/LabelDesigner';
 import { useNavigate } from 'react-router-dom';
 
-const DUMMY_PRODUCTS = [
-    "Shampoo", "Soap", "Cream", "Lotion", "Toothpaste",
-    "Conditioner", "Body Wash", "Face Wash", "Hair Oil", "Perfume"
-];
-
-export default function HierarchyConfig() {
+export default function ShippingLabelManagement() {
     const navigate = useNavigate();
     const [hierarchies, setHierarchies] = useState([]);
     const [selectedHierarchy, setSelectedHierarchy] = useState(null);
     const [levels, setLevels] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [newHierarchyName, setNewHierarchyName] = useState('');
+    const [ssccPrefix, setSsccPrefix] = useState('');
 
     // Level editing
     const [openLevelDialog, setOpenLevelDialog] = useState(false);
@@ -56,11 +52,14 @@ export default function HierarchyConfig() {
     const createHierarchy = async () => {
         if (!newHierarchyName.trim()) return;
         try {
-            const data = await PackagingAPI.createHierarchy({ name: newHierarchyName });
+            // Append SSCC config to name for now as mock storage
+            const nameToSave = ssccPrefix ? `${newHierarchyName} (SSCC: ${ssccPrefix})` : newHierarchyName;
+            const data = await PackagingAPI.createHierarchy({ name: nameToSave });
             setHierarchies([...hierarchies, data]);
             setSelectedHierarchy(data);
             setOpenDialog(false);
             setNewHierarchyName('');
+            setSsccPrefix('');
         } catch (e) { console.error(e); }
     };
 
@@ -91,12 +90,9 @@ export default function HierarchyConfig() {
     };
 
     const handleDesignerSave = async (savedTemplate) => {
-        // Link the saved template to the current level
         if (editingLevel) {
             try {
-                // We need to update the packaging_level with label_template_id
                 await PackagingAPI.updateLevel(editingLevel.id, { label_template_id: savedTemplate.id });
-                // Refresh levels to show updated link
                 loadLevels(selectedHierarchy.id);
                 setDesignerOpen(false);
                 setEditingLevel(null);
@@ -113,7 +109,7 @@ export default function HierarchyConfig() {
             <Grid item xs={12} md={3}>
                 <Paper variant="outlined" sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="subtitle1" fontWeight="bold">Hierarchies</Typography>
+                        <Typography variant="subtitle1" fontWeight="bold">Shipping Hierarchies</Typography>
                         <IconButton size="small" onClick={() => setOpenDialog(true)}><Add /></IconButton>
                     </Box>
                     <List sx={{ flex: 1, overflowY: 'auto' }}>
@@ -139,13 +135,13 @@ export default function HierarchyConfig() {
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                                 <Typography variant="h6">Levels for {selectedHierarchy.name}</Typography>
                                 <Button variant="contained" startIcon={<Add />} onClick={() => {
-                                    setLevelForm({ name: '', order: levels.length + 1 });
+                                    setLevelForm({ name: '', order: levels.length + 1, capacity: 10 });
                                     setOpenLevelDialog(true);
                                 }}>Add Level</Button>
                             </Box>
 
                             <List sx={{ flex: 1, overflowY: 'auto' }}>
-                                {levels.length === 0 && <Typography color="text.secondary">No levels defined. Add levels like "Primary Box", "Carton", "Pallet".</Typography>}
+                                {levels.length === 0 && <Typography color="text.secondary">No levels defined. Add levels like "Pallet", "Container".</Typography>}
                                 {levels.map(l => (
                                     <ListItem key={l.id} sx={{ bgcolor: 'background.default', mb: 1, borderRadius: 1 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
@@ -169,7 +165,6 @@ export default function HierarchyConfig() {
                                 ))}
                             </List>
 
-                            {/* Print Button Area - Below Levels */}
                             <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button
                                     variant="contained"
@@ -177,7 +172,6 @@ export default function HierarchyConfig() {
                                     size="large"
                                     startIcon={<Print />}
                                     onClick={() => navigate(`/print/${selectedHierarchy.id}`)}
-                                // disabled={levels.every(l => !l.label_template)} 
                                 >
                                     Print Labels
                                 </Button>
@@ -193,9 +187,17 @@ export default function HierarchyConfig() {
 
             {/* New Hierarchy Dialog */}
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                <DialogTitle>New Hierarchy</DialogTitle>
+                <DialogTitle>New Shipping Hierarchy</DialogTitle>
                 <DialogContent>
-                    <TextField autoFocus margin="dense" label="Name" fullWidth value={newHierarchyName} onChange={(e) => setNewHierarchyName(e.target.value)} />
+                    <TextField autoFocus margin="dense" label="Name" fullWidth value={newHierarchyName} onChange={(e) => setNewHierarchyName(e.target.value)} sx={{ mb: 2 }} />
+                    <TextField
+                        margin="dense"
+                        label="SSCC Company Prefix"
+                        fullWidth
+                        value={ssccPrefix}
+                        onChange={(e) => setSsccPrefix(e.target.value)}
+                        helperText="Used to generate Shipping Container Codes"
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
@@ -207,30 +209,8 @@ export default function HierarchyConfig() {
             <Dialog open={openLevelDialog} onClose={() => setOpenLevelDialog(false)}>
                 <DialogTitle>Add Level</DialogTitle>
                 <DialogContent>
-                    {parseInt(levelForm.order) === 1 ? (
-                        <TextField
-                            select
-                            autoFocus
-                            margin="dense"
-                            label="Product (Level 1 Item)"
-                            fullWidth
-                            value={levelForm.name}
-                            onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })}
-                            sx={{ mb: 2 }}
-                            SelectProps={{
-                                native: true,
-                            }}
-                        >
-                            <option value=""></option>
-                            {DUMMY_PRODUCTS.map((prod) => (
-                                <option key={prod} value={prod}>
-                                    {prod}
-                                </option>
-                            ))}
-                        </TextField>
-                    ) : (
-                        <TextField autoFocus margin="dense" label="Level Name (e.g., Box)" fullWidth value={levelForm.name} onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })} sx={{ mb: 2 }} />
-                    )}
+                    {/* Standard text field for shipping levels, no product dropdown forced */}
+                    <TextField autoFocus margin="dense" label="Level Name (e.g., Pallet)" fullWidth value={levelForm.name} onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })} sx={{ mb: 2 }} />
                     <TextField type="number" label="Order (1 = Inner, 10 = Outer)" fullWidth value={levelForm.order} onChange={(e) => setLevelForm({ ...levelForm, order: e.target.value })} sx={{ mb: 2 }} />
                     <TextField type="number" label="Capacity (Items per this level)" fullWidth value={levelForm.capacity} onChange={(e) => setLevelForm({ ...levelForm, capacity: e.target.value })} helperText="How many of the previous level fit in one of this level" />
                 </DialogContent>
@@ -240,7 +220,6 @@ export default function HierarchyConfig() {
                 </DialogActions>
             </Dialog>
 
-            {/* Label Designer Popup */}
             <Dialog fullScreen open={designerOpen} onClose={() => setDesignerOpen(false)}>
                 {designerOpen && (
                     <LabelDesigner

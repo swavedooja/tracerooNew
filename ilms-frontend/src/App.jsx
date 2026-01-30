@@ -30,6 +30,8 @@ import PackagingHierarchyEditor from './components/PackagingHierarchyEditor';
 import LocationList from './components/Location/LocationList';
 import MasterDefinitions from './components/MasterDefinitions'; // Added import
 import LabelDashboard from './components/LabelManagement/LabelDashboard'; // Restored Import
+import TradeItemLabelManagement from './components/LabelManagement/TradeItemLabelManagement'; // Added import
+import ShippingLabelManagement from './components/LabelManagement/ShippingLabelManagement'; // Added import
 import PrintStation from './components/LabelManagement/Print/PrintStation'; // Add import
 import PackingDashboard from './components/Packing/PackingDashboard';
 import AggregationStation from './components/Packing/AggregationStation';
@@ -103,7 +105,15 @@ function NavBar({ onLogout }) {
         { label: 'Registration', icon: Inventory2, path: '/inventory/register' },
       ]
     },
-    { label: 'Label Management', icon: Style, path: '/labels' },
+    {
+      label: 'Label Management',
+      icon: Style,
+      stateKey: 'labelsOpen',
+      children: [
+        { label: 'Trade Item', icon: Style, path: '/labels/trade' },
+        { label: 'Shipping', icon: LocalShipping, path: '/labels/shipping' },
+      ]
+    },
     {
       label: 'Packing',
       icon: Archive,
@@ -272,6 +282,8 @@ export default function App() {
           <Route path="/locations" element={<LocationList />} />
           <Route path="/master-definitions" element={<MasterDefinitions />} />
           <Route path="/labels" element={<LabelDashboard />} />
+          <Route path="/labels/trade" element={<TradeItemLabelManagement />} />
+          <Route path="/labels/shipping" element={<ShippingLabelManagement />} />
           <Route path="/label-templates" element={<LabelDashboard />} />
           <Route path="/label-templates/*" element={<LabelDashboard />} />
           <Route path="/print/:hierarchyId" element={<PrintStation />} />

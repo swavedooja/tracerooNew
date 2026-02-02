@@ -6,7 +6,7 @@ import {
     TextField, Chip, Tabs, Tab, Dialog, DialogTitle, DialogContent, DialogActions,
     Alert, LinearProgress, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
-import { ArrowBack, CloudUpload, Print, Calculate, CheckCircle, Error as ErrorIcon, Preview, Download } from '@mui/icons-material';
+import { ArrowBack, Calculate, CheckCircle, Error as ErrorIcon, Print, Storage } from '@mui/icons-material';
 import { PackagingAPI } from '../../../services/APIService';
 import LabelPreview from '../../LabelPreview';
 
@@ -27,7 +27,7 @@ export default function PrintStation() {
 
     // Stepper
     const [activeStep, setActiveStep] = useState(0);
-    const steps = ['Plan Quantities', 'Upload Data', 'Preview & Print'];
+    const steps = ['Plan Quantities', 'Verify Data', 'Preview & Print'];
 
     // Data
     const [levels, setLevels] = useState([]);
@@ -37,7 +37,7 @@ export default function PrintStation() {
     const [totalItems, setTotalItems] = useState('');
     const [calculatedCounts, setCalculatedCounts] = useState({}); // { levelId: count }
 
-    // Step 2: Uploads
+    // Step 2: Data Verification (Loaded from MaterialInventory)
     const [uploadedData, setUploadedData] = useState({}); // { levelId: { headers: [], rows: [] } }
 
     // Step 3: Preview
@@ -46,7 +46,14 @@ export default function PrintStation() {
     const [paperSize, setPaperSize] = useState('A4');
 
     useEffect(() => {
-        if (hierarchyId) loadLevels();
+        if (hierarchyId) {
+            loadLevels();
+            // Load data from shared source
+            const savedData = localStorage.getItem(`materialData_${hierarchyId}`);
+            if (savedData) {
+                setUploadedData(JSON.parse(savedData));
+            }
+        }
     }, [hierarchyId]);
 
     const loadLevels = async () => {
@@ -82,82 +89,24 @@ export default function PrintStation() {
         setActiveStep(1);
     };
 
-    // Step 2: Handle CSV Upload for a specific level
-    const handleFileUpload = (levelId, event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            const text = evt.target.result;
-            const lines = text.split('\n').filter(l => l.trim());
-            if (lines.length > 0) {
-                const headers = lines[0].split(',').map(h => h.trim());
-                const rows = lines.slice(1).map((line, i) => {
-                    const values = line.split(',');
-                    const row = { _id: i };
-                    headers.forEach((h, idx) => row[h] = values[idx]?.trim() || '');
-                    return row;
-                });
-                setUploadedData(prev => ({
-                    ...prev,
-                    [levelId]: { headers, rows }
-                }));
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    // Check if all levels have data
-    const allLevelsUploaded = levels.every(l => uploadedData[l.id]?.rows?.length > 0);
-
     // Check if row count matches expected
     const getUploadStatus = (levelId) => {
         const expected = calculatedCounts[levelId] || 0;
         const actual = uploadedData[levelId]?.rows?.length || 0;
-        if (actual === 0) return { status: 'missing', color: 'default', text: 'Not Uploaded' };
-        if (actual !== expected) return { status: 'mismatch', color: 'error', text: `Mismatch: ${actual}/${expected}` };
-        return { status: 'ok', color: 'success', text: `Uploaded (${actual})` };
+
+        // If 0 expected, we don't need data? Or maybe we do. Assuming we need data if count > 0.
+        if (expected === 0) return { status: 'na', color: 'default', text: 'N/A' };
+
+        if (actual === 0) return { status: 'missing', color: 'error', text: 'No Data Found' };
+        if (actual < expected) return { status: 'mismatch', color: 'warning', text: `Partial: ${actual}/${expected}` };
+        // Be lenient if more data is present, usually that's fine, we just take first N
+        return { status: 'ok', color: 'success', text: `Ready (${actual})` };
     };
 
-    // Generate sample CSV with dummy data for a level
-    const generateSampleCSV = (levelId) => {
-        const level = levels.find(l => l.id === levelId);
-        const count = calculatedCounts[levelId] || 10;
-
-        // Common fields that might be used in labels
-        const headers = ['serialNumber', 'batchNumber', 'materialCode', 'materialName', 'expiryDate', 'mfgDate', 'netWeight'];
-
-        // Generate dummy rows
-        const rows = [];
-        const today = new Date();
-        const expiryDate = new Date(today);
-        expiryDate.setFullYear(today.getFullYear() + 2);
-
-        for (let i = 1; i <= count; i++) {
-            rows.push([
-                `SN-${today.toLocaleDateString('en-GB').replace(/\//g, '')}-${String(i).padStart(5, '0')}`,
-                `BATCH-${today.getFullYear()}-${String(Math.floor(Math.random() * 100)).padStart(3, '0')}`,
-                `MAT-${String(1000 + i).padStart(8, '0')}`,
-                `Sample Product ${level?.level_name || 'Item'} #${i}`,
-                expiryDate.toISOString().split('T')[0],
-                today.toISOString().split('T')[0],
-                `${(Math.random() * 500 + 100).toFixed(0)}g`
-            ]);
-        }
-
-        // Create CSV content
-        const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-
-        // Download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `sample_${level?.level_name || 'data'}_${count}_rows.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    const allLevelsReady = levels.every(l => {
+        const status = getUploadStatus(l.id);
+        return status.status === 'ok' || status.status === 'na';
+    });
 
     // Step 3: Render Imposition Preview for a level
     const renderImposition = (levelId) => {
@@ -170,7 +119,7 @@ export default function PrintStation() {
             : template.canvas_design || [];
 
         const data = uploadedData[levelId]?.rows || [];
-        if (data.length === 0) return <Typography>No data uploaded for this level.</Typography>;
+        if (data.length === 0) return <Typography>No data available for this level.</Typography>;
 
         const paperDims = paperSize === 'A4' ? { w: 210, h: 297 } : { w: 215.9, h: 279.4 };
         const pxPerMm = 3.78;
@@ -179,8 +128,11 @@ export default function PrintStation() {
         const cols = Math.floor(paperDims.w / (template.width || 100));
         const rows = Math.floor(paperDims.h / (template.height || 150));
         const labelsPerSheet = cols * rows;
-        const totalLabels = data.length;
+        const totalLabels = calculatedCounts[levelId] || data.length; // Limit to calculated count
         const totalSheets = Math.ceil(totalLabels / labelsPerSheet);
+
+        // Slice data to match needed quantity
+        const neededData = data.slice(0, totalLabels);
 
         return (
             <Box>
@@ -202,7 +154,7 @@ export default function PrintStation() {
                         mx: 'auto'
                     }}
                 >
-                    {data.slice(0, labelsPerSheet).map((rowData, i) => (
+                    {neededData.slice(0, labelsPerSheet).map((rowData, i) => (
                         <Box key={i} sx={{ border: '1px dashed #eee', overflow: 'hidden' }}>
                             <LabelPreview
                                 width={labelW}
@@ -303,12 +255,12 @@ export default function PrintStation() {
                 </Paper>
             )}
 
-            {/* Step 2: Upload Data */}
+            {/* Step 2: Verify Data */}
             {activeStep === 1 && (
                 <Paper sx={{ p: 4 }}>
-                    <Typography variant="h6" gutterBottom>Upload CSV Data for Each Level</Typography>
+                    <Typography variant="h6" gutterBottom>Verify Data Availability</Typography>
                     <Alert severity="info" sx={{ mb: 3 }}>
-                        Upload a separate CSV file for each packaging level. Ensure the row count matches the required quantity.
+                        Data is sourced from Material Inventory. If data is missing, please go to 'Material Inventory' to upload or sync it.
                     </Alert>
 
                     <TableContainer component={Paper} variant="outlined">
@@ -317,17 +269,19 @@ export default function PrintStation() {
                                 <TableRow>
                                     <TableCell>Level</TableCell>
                                     <TableCell>Required</TableCell>
+                                    <TableCell>Available Data</TableCell>
                                     <TableCell>Status</TableCell>
-                                    <TableCell>Action</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {levels.map(l => {
                                     const status = getUploadStatus(l.id);
+                                    const available = uploadedData[l.id]?.rows?.length || 0;
                                     return (
                                         <TableRow key={l.id}>
                                             <TableCell><b>{l.level_name}</b></TableCell>
                                             <TableCell>{calculatedCounts[l.id]}</TableCell>
+                                            <TableCell>{available}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     size="small"
@@ -336,22 +290,6 @@ export default function PrintStation() {
                                                     icon={status.status === 'ok' ? <CheckCircle /> : status.status === 'mismatch' ? <ErrorIcon /> : null}
                                                 />
                                             </TableCell>
-                                            <TableCell>
-                                                <Button component="label" variant="outlined" size="small" startIcon={<CloudUpload />}>
-                                                    Upload CSV
-                                                    <input type="file" hidden accept=".csv" onChange={(e) => handleFileUpload(l.id, e)} />
-                                                </Button>
-                                                <Button
-                                                    variant="text"
-                                                    size="small"
-                                                    startIcon={<Download />}
-                                                    onClick={() => generateSampleCSV(l.id)}
-                                                    sx={{ ml: 1 }}
-                                                    title="Download sample CSV with dummy data"
-                                                >
-                                                    Sample
-                                                </Button>
-                                            </TableCell>
                                         </TableRow>
                                     );
                                 })}
@@ -359,15 +297,54 @@ export default function PrintStation() {
                         </Table>
                     </TableContainer>
 
+                    {/* Preview Table for Data (Optional, just first few rows to confirm) */}
+                    {Object.keys(uploadedData).length > 0 && (
+                        <Box sx={{ mt: 4 }}>
+                            <Typography variant="subtitle2" gutterBottom>Data Preview (First 3 rows of loaded data)</Typography>
+                            <Tabs value={previewLevel || levels[0]?.id} onChange={(_, v) => setPreviewLevel(v)} sx={{ mb: 1, minHeight: 0 }}>
+                                {levels.map(l => <Tab key={l.id} label={l.level_name} value={l.id} sx={{ py: 1, minHeight: 0 }} />)}
+                            </Tabs>
+                            {previewLevel && uploadedData[previewLevel] && (
+                                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 200 }}>
+                                    <Table size="small" stickyHeader>
+                                        <TableHead>
+                                            <TableRow>
+                                                {uploadedData[previewLevel].headers.map((h, i) => <TableCell key={i}>{h}</TableCell>)}
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {uploadedData[previewLevel].rows.slice(0, 3).map((r, i) => (
+                                                <TableRow key={i}>
+                                                    {uploadedData[previewLevel].headers.map((h, j) => <TableCell key={j}>{r[h]}</TableCell>)}
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
+                        </Box>
+                    )}
+
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
                         <Button onClick={() => setActiveStep(0)}>Back</Button>
-                        <Button
-                            variant="contained"
-                            onClick={() => setActiveStep(2)}
-                            disabled={!allLevelsUploaded}
-                        >
-                            Continue to Preview
-                        </Button>
+                        <Box>
+                            {!allLevelsReady && (
+                                <Button
+                                    sx={{ mr: 2 }}
+                                    color="warning"
+                                    onClick={() => navigate(`/label-management/material-inventory/${hierarchyId}`)}
+                                >
+                                    Go to Material Inventory
+                                </Button>
+                            )}
+                            <Button
+                                variant="contained"
+                                onClick={() => setActiveStep(2)}
+                                disabled={!allLevelsReady}
+                            >
+                                Continue to Preview
+                            </Button>
+                        </Box>
                     </Box>
                 </Paper>
             )}

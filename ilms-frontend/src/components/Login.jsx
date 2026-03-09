@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Box,
@@ -289,6 +290,31 @@ export default function Login({ onLogin }) {
                 >
                   Demo Credentials: admin / admin123
                 </Typography>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.0, duration: 0.5 }}
+              >
+                <Button
+                  component={Link}
+                  to="/mobile-wireframe"
+                  fullWidth
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderWidth: 2,
+                    '&:hover': {
+                      borderWidth: 2,
+                    }
+                  }}
+                >
+                  Try Mobile App Wireframe
+                </Button>
               </motion.div>
             </Stack>
           </Box>

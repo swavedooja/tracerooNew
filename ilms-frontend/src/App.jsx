@@ -36,6 +36,8 @@ import MaterialInventory from './components/LabelManagement/MaterialInventory'; 
 import PackingDashboard from './components/Packing/PackingDashboard';
 import AggregationStation from './components/Packing/AggregationStation';
 import PrintStation from './components/LabelManagement/Print/PrintStation';
+import MobileApp from './components/Mobile/MobileApp';
+
 
 import Registration from './components/Inventory/Registration';
 import SerialGeneration from './components/Inventory/SerialGeneration';
@@ -82,8 +84,8 @@ function NavBar({ onLogout }) {
       stateKey: 'dashboardOpen',
       children: [
         { label: 'Operations', icon: Timeline, path: '/' },
-        { label: 'Home', icon: DashboardIcon, path: '/dashboard/home' },
-        { label: 'ChainTrack', icon: Timeline, path: '/chaintrack' },
+        // { label: 'Home', icon: DashboardIcon, path: '/dashboard/home' },
+        // { label: 'ChainTrack', icon: Timeline, path: '/chaintrack' },
       ]
     },
     {
@@ -96,16 +98,16 @@ function NavBar({ onLogout }) {
         { label: 'Definitions', icon: ListAlt, path: '/master-definitions' },
       ]
     },
-    {
-      label: 'Inventory',
-      icon: Inventory2,
-      stateKey: 'inventoryOpen',
-      children: [
-        { label: 'Generate Serials', icon: QrCodeScanner, path: '/inventory/serials' },
-        { label: 'Scan Confirmation', icon: QrCodeScanner, path: '/inventory/scan' },
-        { label: 'Registration', icon: Inventory2, path: '/inventory/register' },
-      ]
-    },
+    // {
+    //   label: 'Inventory',
+    //   icon: Inventory2,
+    //   stateKey: 'inventoryOpen',
+    //   children: [
+    //     { label: 'Generate Serials', icon: QrCodeScanner, path: '/inventory/serials' },
+    //     { label: 'Scan Confirmation', icon: QrCodeScanner, path: '/inventory/scan' },
+    //     { label: 'Registration', icon: Inventory2, path: '/inventory/register' },
+    //   ]
+    // },
     {
       label: 'Label Management',
       icon: Style,
@@ -116,16 +118,16 @@ function NavBar({ onLogout }) {
         { label: 'Material Inventory', icon: Storage, path: '/label-management/material-inventory' },
       ]
     },
-    {
-      label: 'Packing',
-      icon: Archive,
-      stateKey: 'packingOpen',
-      children: [
-        { label: 'Aggregation Station', icon: QrCodeScanner, path: '/packing/aggregation' },
-        { label: 'Packing Dashboard', icon: Inventory2, path: '/packing' },
-      ]
-    },
-    { label: 'Shipping', icon: LocalShipping, path: '/shipping' },
+    // {
+    //   label: 'Packing',
+    //   icon: Archive,
+    //   stateKey: 'packingOpen',
+    //   children: [
+    //     { label: 'Aggregation Station', icon: QrCodeScanner, path: '/packing/aggregation' },
+    //     { label: 'Packing Dashboard', icon: Inventory2, path: '/packing' },
+    //   ]
+    // },
+    // { label: 'Shipping', icon: LocalShipping, path: '/shipping' },
     { label: 'Track & Trace', icon: Timeline, path: '/trace' },
   ];
 
@@ -266,14 +268,29 @@ function NavBar({ onLogout }) {
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const location = useLocation();
 
-  if (!isAuthenticated) return <Login onLogin={() => setIsAuthenticated(true)} />;
+  const isMobileWireframe = location.pathname === '/mobile-wireframe';
+
+  if (!isAuthenticated && !isMobileWireframe) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: isMobileWireframe ? '#f5f5f5' : 'inherit' }}>
       <GlobalStyles styles={{ body: { scrollBehavior: 'smooth' } }} />
-      <NavBar onLogout={() => setIsAuthenticated(false)} />
-      <Container maxWidth="xl" sx={{ mt: { xs: 2, sm: 3 }, mb: { xs: 3, sm: 6 }, flex: 1, display: 'flex', flexDirection: 'column', px: { xs: 1, sm: 2, md: 3 } }}>
+      {!isMobileWireframe && <NavBar onLogout={() => setIsAuthenticated(false)} />}
+      <Container
+        maxWidth={isMobileWireframe ? false : "xl"}
+        sx={{
+          mt: isMobileWireframe ? 0 : { xs: 2, sm: 3 },
+          mb: isMobileWireframe ? 0 : { xs: 3, sm: 6 },
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          px: isMobileWireframe ? 0 : { xs: 1, sm: 2, md: 3 }
+        }}
+      >
         <Routes>
           <Route path="/" element={<DashboardMetrics />} />
           <Route path="/dashboard/home" element={<Dashboard />} />
@@ -300,9 +317,10 @@ export default function App() {
           <Route path="/shipping" element={<ShipmentCreate />} />
           <Route path="/trace" element={<TrackTraceDashboard />} />
           <Route path="/chaintrack" element={<ChainTrackDashboard />} />
+          <Route path="/mobile-wireframe" element={<MobileApp />} />
         </Routes>
       </Container>
-      <Footer />
+      {!isMobileWireframe && <Footer />}
     </Box>
   );
 }

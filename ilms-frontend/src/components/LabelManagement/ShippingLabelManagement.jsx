@@ -5,10 +5,13 @@ import { PackagingAPI } from '../../services/APIService';
 import LabelDesigner from '../LabelDesigner/LabelDesigner';
 import { useNavigate } from 'react-router-dom';
 
-const WINE_PACKAGING_DATA = [
-    { name: 'Wine Bottle (750ml)', type: 'Bottle', dimensions: '75mm x 75mm x 300mm', weight: '1.2kg' },
-    { name: '6-Bottle Case', type: 'Box', dimensions: '250mm x 160mm x 320mm', weight: '7.5kg' },
-    { name: '12-Bottle Case', type: 'Box', dimensions: '320mm x 250mm x 320mm', weight: '15kg' },
+const FMCG_PACKAGING_DATA = [
+    { name: 'Shampoo Bottle (200ml)', type: 'Bottle', dimensions: '50mm x 50mm x 150mm', weight: '0.25kg' },
+    { name: 'Shampoo Bottle (500ml)', type: 'Bottle', dimensions: '70mm x 70mm x 220mm', weight: '0.6kg' },
+    { name: 'Fairness Cream Tube (50g)', type: 'Tube', dimensions: '30mm x 30mm x 120mm', weight: '0.06kg' },
+    { name: 'Fairness Cream Jar (100g)', type: 'Jar', dimensions: '60mm x 60mm x 50mm', weight: '0.15kg' },
+    { name: '12-Unit Display Box', type: 'Box', dimensions: '200mm x 150mm x 150mm', weight: '3.0kg' },
+    { name: '48-Unit Master Carton', type: 'Carton', dimensions: '400mm x 300mm x 300mm', weight: '12.0kg' },
     { name: 'Standard Pallet', type: 'Pallet', dimensions: '1200mm x 1000mm x 1500mm', weight: '500kg' },
     { name: 'Euro Pallet', type: 'Pallet', dimensions: '1200mm x 800mm x 1500mm', weight: '400kg' },
     { name: '20ft Container', type: 'Container', dimensions: '5.9m x 2.35m x 2.39m', weight: 'Max 28,000kg' },
@@ -255,7 +258,7 @@ export default function ShippingLabelManagement() {
                             }}
                         >
                             <option value=""></option>
-                            {WINE_PACKAGING_DATA.map((pkg) => (
+                            {FMCG_PACKAGING_DATA.map((pkg) => (
                                 <option key={pkg.name} value={pkg.name}>
                                     {pkg.name}
                                 </option>
@@ -263,7 +266,7 @@ export default function ShippingLabelManagement() {
                         </TextField>
 
                         {(() => {
-                            const selectedPkg = WINE_PACKAGING_DATA.find(p => p.name === levelForm.name);
+                            const selectedPkg = FMCG_PACKAGING_DATA.find(p => p.name === levelForm.name);
                             if (!selectedPkg) return null;
                             return (
                                 <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, mb: 2, border: '1px solid #e0e0e0' }}>

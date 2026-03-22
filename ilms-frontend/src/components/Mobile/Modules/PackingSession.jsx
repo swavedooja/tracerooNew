@@ -16,7 +16,7 @@ const PackingSession = ({ onBack }) => {
 
     const handleAddSampleItem = () => {
         if (sessionData.scannedItems.length < sessionData.targetCount) {
-            const newItem = `SN-WINE-2026-${String(sessionData.scannedItems.length + 1).padStart(4, '0')}`;
+            const newItem = `SN-FMCG-2026-${String(sessionData.scannedItems.length + 1).padStart(4, '0')}`;
             setSessionData(prev => ({
                 ...prev,
                 scannedItems: [...prev.scannedItems, newItem]

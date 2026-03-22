@@ -5,9 +5,14 @@ import { PackagingAPI } from '../../../services/APIService';
 import LabelDesigner from '../../LabelDesigner/LabelDesigner';
 import { useNavigate } from 'react-router-dom';
 
-const DUMMY_PRODUCTS = [
-    "Shampoo", "Soap", "Cream", "Lotion", "Toothpaste",
-    "Conditioner", "Body Wash", "Face Wash", "Hair Oil", "Perfume"
+const WINE_PACKAGING_DATA = [
+    { name: 'Wine Bottle (750ml)', type: 'Bottle', dimensions: '75mm x 75mm x 300mm', weight: '1.2kg' },
+    { name: '6-Bottle Case', type: 'Box', dimensions: '250mm x 160mm x 320mm', weight: '7.5kg' },
+    { name: '12-Bottle Case', type: 'Box', dimensions: '320mm x 250mm x 320mm', weight: '15kg' },
+    { name: 'Standard Pallet', type: 'Pallet', dimensions: '1200mm x 1000mm x 1500mm', weight: '500kg' },
+    { name: 'Euro Pallet', type: 'Pallet', dimensions: '1200mm x 800mm x 1500mm', weight: '400kg' },
+    { name: '20ft Container', type: 'Container', dimensions: '5.9m x 2.35m x 2.39m', weight: 'Max 28,000kg' },
+    { name: '40ft Container', type: 'Container', dimensions: '12.0m x 2.35m x 2.39m', weight: 'Max 29,000kg' }
 ];
 
 export default function HierarchyConfig() {
@@ -169,6 +174,27 @@ export default function HierarchyConfig() {
                                 ))}
                             </List>
 
+                            {/* Graphical Representation Here */}
+                            {levels.length > 0 && (
+                                <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 2 }}>Packaging Hierarchy Visualization</Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', overflowX: 'auto', pb: 1 }}>
+                                        {[...levels].sort((a, b) => a.level_order - b.level_order).map((l, index) => (
+                                            <React.Fragment key={`graphical-${l.id}`}>
+                                                <Paper elevation={2} sx={{ p: 1.5, minWidth: 120, textAlign: 'center', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                                                    <Typography variant="caption" display="block" sx={{ opacity: 0.8 }}>Level {l.level_order}</Typography>
+                                                    <Typography variant="body1" fontWeight="bold">{l.level_name.split(' (')[0]}</Typography>
+                                                    {l.capacity > 1 && <Typography variant="caption" display="block">Capacity: {l.capacity}</Typography>}
+                                                </Paper>
+                                                {index < levels.length - 1 && (
+                                                    <Box sx={{ mx: 2, color: 'text.secondary', fontWeight: 'bold' }}>➔</Box>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
                             {/* Print Button Area - Below Levels */}
                             <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button
@@ -207,12 +233,12 @@ export default function HierarchyConfig() {
             <Dialog open={openLevelDialog} onClose={() => setOpenLevelDialog(false)}>
                 <DialogTitle>Add Level</DialogTitle>
                 <DialogContent>
-                    {parseInt(levelForm.order) === 1 ? (
+                    <>
                         <TextField
                             select
                             autoFocus
                             margin="dense"
-                            label="Product (Level 1 Item)"
+                            label={parseInt(levelForm.order) === 1 ? "Product (Level 1 Item)" : "Packaging Level"}
                             fullWidth
                             value={levelForm.name}
                             onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })}
@@ -222,15 +248,25 @@ export default function HierarchyConfig() {
                             }}
                         >
                             <option value=""></option>
-                            {DUMMY_PRODUCTS.map((prod) => (
-                                <option key={prod} value={prod}>
-                                    {prod}
+                            {WINE_PACKAGING_DATA.map((pkg) => (
+                                <option key={pkg.name} value={pkg.name}>
+                                    {pkg.name}
                                 </option>
                             ))}
                         </TextField>
-                    ) : (
-                        <TextField autoFocus margin="dense" label="Level Name (e.g., Box)" fullWidth value={levelForm.name} onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })} sx={{ mb: 2 }} />
-                    )}
+
+                        {(() => {
+                            const selectedPkg = WINE_PACKAGING_DATA.find(p => p.name === levelForm.name);
+                            if (!selectedPkg) return null;
+                            return (
+                                <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1, mb: 2, border: '1px solid #e0e0e0' }}>
+                                    <Typography variant="body2" color="text.secondary"><strong>Type:</strong> {selectedPkg.type}</Typography>
+                                    <Typography variant="body2" color="text.secondary"><strong>Dimensions:</strong> {selectedPkg.dimensions}</Typography>
+                                    <Typography variant="body2" color="text.secondary"><strong>Weight:</strong> {selectedPkg.weight}</Typography>
+                                </Box>
+                            );
+                        })()}
+                    </>
                     <TextField type="number" label="Order (1 = Inner, 10 = Outer)" fullWidth value={levelForm.order} onChange={(e) => setLevelForm({ ...levelForm, order: e.target.value })} sx={{ mb: 2 }} />
                     <TextField type="number" label="Capacity (Items per this level)" fullWidth value={levelForm.capacity} onChange={(e) => setLevelForm({ ...levelForm, capacity: e.target.value })} helperText="How many of the previous level fit in one of this level" />
                 </DialogContent>

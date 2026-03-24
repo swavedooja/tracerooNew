@@ -272,7 +272,7 @@ export default function HierarchyConfig() {
             {/* New Hierarchy Dialog */}
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
                 <DialogTitle>New Packaging Hierarchy</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ minHeight: 350, minWidth: 400 }}>
                     <TextField
                         select
                         autoFocus

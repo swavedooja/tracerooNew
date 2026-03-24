@@ -294,7 +294,7 @@ export default function TradeItemLabelManagement() {
             {/* New Hierarchy Dialog */}
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
                 <DialogTitle>New Trade Hierarchy</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ minHeight: 350, minWidth: 400 }}>
                     <TextField
                         select
                         autoFocus

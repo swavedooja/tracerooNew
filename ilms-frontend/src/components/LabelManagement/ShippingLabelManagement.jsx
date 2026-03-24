@@ -290,7 +290,7 @@ export default function ShippingLabelManagement() {
             {/* New Hierarchy Dialog */}
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
                 <DialogTitle>New Shipping Hierarchy</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ minHeight: 350, minWidth: 400 }}>
                     <TextField
                         select
                         autoFocus

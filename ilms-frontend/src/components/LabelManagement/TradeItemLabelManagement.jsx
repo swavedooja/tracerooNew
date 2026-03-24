@@ -69,7 +69,13 @@ export default function TradeItemLabelManagement() {
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedSku, setSelectedSku] = useState('');
+    const [selectedSku, setSelectedSku] = useState('');
     const [selectedPackagingType, setSelectedPackagingType] = useState('');
+
+    // List Filters
+    const [searchQuery, setSearchQuery] = useState('');
+    const [productFilter, setProductFilter] = useState('All');
+    const [sortOrder, setSortOrder] = useState('A-Z');
 
     // Level editing
     const [openLevelDialog, setOpenLevelDialog] = useState(false);
@@ -189,14 +195,40 @@ export default function TradeItemLabelManagement() {
                         <Typography variant="subtitle1" fontWeight="bold">Trade Item Hierarchies</Typography>
                         <IconButton size="small" onClick={() => setOpenDialog(true)}><Add /></IconButton>
                     </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                        <TextField size="small" placeholder="Search hierarchies..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <TextField select size="small" fullWidth value={productFilter} onChange={e => setProductFilter(e.target.value)}>
+                                <MenuItem value="All">All Products</MenuItem>
+                                <MenuItem value="Shampoo">Shampoo</MenuItem>
+                                <MenuItem value="Cream">Cream</MenuItem>
+                                <MenuItem value="Soap">Soap</MenuItem>
+                                <MenuItem value="Wine">Wine</MenuItem>
+                            </TextField>
+                            <TextField select size="small" fullWidth value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
+                                <MenuItem value="A-Z">Sort A-Z</MenuItem>
+                                <MenuItem value="Z-A">Sort Z-A</MenuItem>
+                                <MenuItem value="Newest">Newest</MenuItem>
+                            </TextField>
+                        </Box>
+                    </Box>
                     <List sx={{ flex: 1, overflowY: 'auto' }}>
-                        {hierarchies.map(h => (
+                        {hierarchies
+                            .filter(h => h.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .filter(h => productFilter === 'All' || h.name.includes(productFilter))
+                            .sort((a, b) => {
+                                if (sortOrder === 'A-Z') return a.name.localeCompare(b.name);
+                                if (sortOrder === 'Z-A') return b.name.localeCompare(a.name);
+                                return b.id - a.id; 
+                            })
+                            .map((h, index) => (
                             <ListItem
                                 key={h.id}
                                 button
                                 selected={selectedHierarchy?.id === h.id}
                                 onClick={() => setSelectedHierarchy(h)}
                             >
+                                <Typography variant="caption" sx={{ mr: 1, color: 'text.secondary', fontWeight: 'bold' }}>{index + 1}.</Typography>
                                 <ListItemText primary={h.name} />
                             </ListItem>
                         ))}

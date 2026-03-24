@@ -104,7 +104,8 @@ function NavBar({ onLogout }) {
       icon: Inventory2,
       stateKey: 'inventoryOpen',
       children: [
-        { label: 'Generate Label', icon: Print, path: '/labels/generate' }
+        { label: 'Generate Label', icon: Print, path: '/labels/generate' },
+        { label: 'Material Inventory', icon: Storage, path: '/label-management/material-inventory' },
       ]
     },
     {
@@ -114,7 +115,6 @@ function NavBar({ onLogout }) {
       children: [
         { label: 'Trade Item', icon: Style, path: '/labels/trade' },
         { label: 'Shipping', icon: LocalShipping, path: '/labels/shipping' },
-        { label: 'Material Inventory', icon: Storage, path: '/label-management/material-inventory' },
       ]
     },
     // {

@@ -284,17 +284,6 @@ export default function TradeItemLabelManagement() {
                                 </Box>
                             )}
 
-                            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    startIcon={<Print />}
-                                    onClick={() => navigate(`/print/${selectedHierarchy.id}`)}
-                                >
-                                    Print Labels
-                                </Button>
-                            </Box>
                         </>
                     ) : (
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -412,7 +401,20 @@ export default function TradeItemLabelManagement() {
                             sx={{ mb: 2 }}
                         >
                             <MenuItem value="" disabled><em>Select Level</em></MenuItem>
-                            {FMCG_PACKAGING_DATA.filter(pkg => !['Pallet', 'Container'].includes(pkg.type)).map((pkg) => (
+                            {FMCG_PACKAGING_DATA.filter(pkg => {
+                                if (['Pallet', 'Container'].includes(pkg.type)) return false;
+                                const hName = selectedHierarchy?.name || '';
+                                let prod = null;
+                                if (hName.includes('Shampoo')) prod = 'Shampoo';
+                                else if (hName.includes('Cream')) prod = 'Cream';
+                                else if (hName.includes('Soap')) prod = 'Soap';
+                                else if (hName.includes('Wine')) prod = 'Wine';
+                                
+                                if (prod && !['Box', 'Carton'].includes(pkg.type)) {
+                                    if (!pkg.name.includes(prod)) return false;
+                                }
+                                return true;
+                            }).map((pkg) => (
                                 <MenuItem key={pkg.name} value={pkg.name}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         {getIconForType(pkg.type || pkg.name)}

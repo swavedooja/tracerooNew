@@ -282,17 +282,6 @@ export default function ShippingLabelManagement() {
                                 </Box>
                             )}
 
-                            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    startIcon={<Print />}
-                                    onClick={() => navigate(`/print/${selectedHierarchy.id}`)}
-                                >
-                                    Print Labels
-                                </Button>
-                            </Box>
                         </>
                     ) : (
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>

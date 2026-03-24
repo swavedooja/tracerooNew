@@ -148,8 +148,8 @@ export default function MaterialCreate() {
       materialCode: `MAT-${unique}`,
       materialName: `Auto Material ${unique}`,
       description: 'Auto-generated material for testing',
-      packagingTypes: ['Global'],
-      packagingMaterials: ['Carton'],
+      packagingTypes: ['Global Packaging'],
+      packagingMaterials: [{ material: 'Carton', length: 400, width: 300, height: 300, dimUom: 'MM', weight: 1.2, weightUom: 'KG' }],
       skus: [{ name: `SKU-${unique}-Base`, type: 'Bottle' }],
       countryOfOrigin: 'USA',
       type: TYPES[0],
@@ -382,7 +382,7 @@ export default function MaterialCreate() {
               <Autocomplete
                 multiple
                 freeSolo
-                options={['Global', 'Economy', 'Standard', 'Premium', 'Value Pack']}
+                options={['Economy Packaging', 'Global Packaging', 'Standard Packaging', 'Premium', 'Value Pack']}
                 value={form.packagingTypes}
                 onChange={(e, newValue) => setForm(f => ({ ...f, packagingTypes: newValue }))}
                 renderTags={(value, getTagProps) =>
@@ -392,21 +392,65 @@ export default function MaterialCreate() {
                 }
                 renderInput={(params) => <TextField {...params} label="Packaging Types" placeholder="Type and press Enter" size="small" />}
               />
+              {(form.packagingTypes || []).length > 0 && (
+                  <Box sx={{ mt: 1, p: 1.5, bgcolor: '#f0f7ff', borderRadius: 1, border: '1px solid #90caf9' }}>
+                      <Typography variant="subtitle2" color="primary.dark" gutterBottom>Selected Type Information</Typography>
+                      {form.packagingTypes.map(pt => (
+                          <Box key={pt} sx={{ mb: 0.5 }}>
+                              <Typography variant="body2" fontWeight="bold">{pt}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                  {pt.includes('Economy') ? 'Uses lesser levels of packaging and cheaper material. Choose when shipping location is not far and/or price is a constraint.' :
+                                   pt.includes('Global') ? 'Uses high-quality sturdy material suitable for long transit covering multiple modes.' :
+                                   pt.includes('Standard') ? 'Default level of protection suitable for regional shipping.' :
+                                   'Custom configuration rules apply to this selected type.'}
+                              </Typography>
+                          </Box>
+                      ))}
+                  </Box>
+              )}
             </Grid>
             <Grid item xs={12}>
-              <Autocomplete
-                multiple
-                freeSolo
-                options={['Carton', 'Box', 'Wooden Crate', 'Premium Wrap']}
-                value={form.packagingMaterials}
-                onChange={(e, newValue) => setForm(f => ({ ...f, packagingMaterials: newValue }))}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip variant="outlined" label={option} size="small" {...getTagProps({ index })} />
-                  ))
-                }
-                renderInput={(params) => <TextField {...params} label="Packaging Materials" placeholder="Type and press Enter" size="small" />}
-              />
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="subtitle2" color="text.secondary">Packaging Materials</Typography>
+                <Button size="small" startIcon={<Add />} onClick={() => setForm(f => ({ ...f, packagingMaterials: [...(f.packagingMaterials || []), { material: '', length: '', width: '', height: '', dimUom: 'MM', weight: '', weightUom: 'KG' }] }))}>Add Material</Button>
+              </Box>
+              {(form.packagingMaterials || []).map((mat, index) => (
+                <Paper key={index} variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#fbfbfb' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                     <Typography variant="subtitle2">Material {index + 1}</Typography>
+                     <IconButton size="small" color="error" onClick={() => {
+                        const newMats = [...form.packagingMaterials];
+                        newMats.splice(index, 1);
+                        setForm(f => ({ ...f, packagingMaterials: newMats }));
+                     }}><Delete fontSize="small" /></IconButton>
+                  </Box>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                       <TextField select label="Material" size="small" fullWidth value={mat.material || ''} onChange={e => {
+                           const nm = [...form.packagingMaterials];
+                           nm[index] = { ...nm[index], material: e.target.value };
+                           setForm(f => ({ ...f, packagingMaterials: nm }));
+                       }}>
+                           {['Box', 'Carton', 'Wooden Crate', 'Premium Wrap', 'Shrink Wrap'].map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
+                       </TextField>
+                    </Grid>
+                    <Grid item xs={4} sm={2}><TextField type="number" label="Length" size="small" fullWidth value={mat.length || ''} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], length:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }} /></Grid>
+                    <Grid item xs={4} sm={2}><TextField type="number" label="Width" size="small" fullWidth value={mat.width || ''} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], width:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }} /></Grid>
+                    <Grid item xs={4} sm={2}><TextField type="number" label="Height" size="small" fullWidth value={mat.height || ''} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], height:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }} /></Grid>
+                    <Grid item xs={12} sm={2}>
+                       <TextField select label="Dim UOM" size="small" fullWidth value={mat.dimUom || 'MM'} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], dimUom:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }}>
+                           {['MM', 'CM', 'IN', 'M'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                       </TextField>
+                    </Grid>
+                    <Grid item xs={8} sm={4}><TextField type="number" label="Empty Weight" size="small" fullWidth value={mat.weight || ''} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], weight:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }} /></Grid>
+                    <Grid item xs={4} sm={2}>
+                       <TextField select label="Weight UOM" size="small" fullWidth value={mat.weightUom || 'KG'} onChange={e => { const nm=[...form.packagingMaterials]; nm[index]={...nm[index], weightUom:e.target.value}; setForm(f=>({...f, packagingMaterials:nm})) }}>
+                           {['KG', 'GM', 'LB', 'OZ'].map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                       </TextField>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              ))}
             </Grid>
             <Grid item xs={12}>
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -420,11 +464,13 @@ export default function MaterialCreate() {
                     newSkus[index].name = e.target.value;
                     setForm(f => ({ ...f, skus: newSkus }));
                   }} />
-                  <TextField label="SKU Type" size="small" fullWidth value={sku.type} onChange={e => {
+                  <TextField select label="SKU Type" size="small" fullWidth value={sku.type} onChange={e => {
                     const newSkus = [...form.skus];
                     newSkus[index].type = e.target.value;
                     setForm(f => ({ ...f, skus: newSkus }));
-                  }} />
+                  }}>
+                    {['Bottle', 'Tube', 'Jar', 'Sachet', 'Box', 'Carton', 'Other'].map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+                  </TextField>
                   <IconButton color="error" onClick={() => {
                     const newSkus = [...form.skus];
                     newSkus.splice(index, 1);

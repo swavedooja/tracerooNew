@@ -69,7 +69,6 @@ export default function TradeItemLabelManagement() {
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedSku, setSelectedSku] = useState('');
-    const [selectedSku, setSelectedSku] = useState('');
     const [selectedPackagingType, setSelectedPackagingType] = useState('');
 
     // List Filters
@@ -305,9 +304,12 @@ export default function TradeItemLabelManagement() {
                                                             </Box>
                                                         )}
                                                     </Box>
-                                                    <Typography variant="body1" fontWeight="bold" color="primary.dark" sx={{ mb: innerContent ? 3 : 1, textAlign: 'center' }}>
-                                                        {level.level_name.split(' (')[0]}
-                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: innerContent ? 3 : 1 }}>
+                                                        {getIconForType(level.level_name)}
+                                                        <Typography variant="body1" fontWeight="bold" color="primary.dark" sx={{ textAlign: 'center', mt: 0.5 }}>
+                                                            {level.level_name.split(' (')[0]}
+                                                        </Typography>
+                                                    </Box>
                                                     {innerContent}
                                                 </Paper>
                                             )
